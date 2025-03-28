@@ -1,0 +1,112 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 255 100% 99%;
+    --foreground: 265 40% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 265 40% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 265 40% 20%;
+
+    --primary: 265 89% 70%;
+    --primary-foreground: 240 40% 98%;
+
+    --secondary: 275 91% 60%;
+    --secondary-foreground: 240 40% 98%;
+
+    --muted: 265 40% 96.1%;
+    --muted-foreground: 265 16.3% 46.9%;
+
+    --accent: 275 84% 76%;
+    --accent-foreground: 240 40% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 240 40% 98%;
+
+    --border: 265 31.8% 91.4%;
+    --input: 265 31.8% 91.4%;
+    --ring: 265 89% 70%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 240 40% 98%;
+    --sidebar-foreground: 265 40% 20%;
+    --sidebar-primary: 265 89% 70%;
+    --sidebar-primary-foreground: 240 40% 98%;
+    --sidebar-accent: 275 84% 76%;
+    --sidebar-accent-foreground: 240 40% 98%;
+    --sidebar-border: 265 31.8% 91.4%;
+    --sidebar-ring: 265 89% 70%;
+  }
+
+  .dark {
+    --background: 265 40% 5%;
+    --foreground: 240 40% 98%;
+
+    --card: 265 40% 10%;
+    --card-foreground: 240 40% 98%;
+
+    --popover: 265 40% 10%;
+    --popover-foreground: 240 40% 98%;
+
+    --primary: 265 89% 70%;
+    --primary-foreground: 240 40% 98%;
+
+    --secondary: 275 91% 60%;
+    --secondary-foreground: 240 40% 98%;
+
+    --muted: 265 40% 15%;
+    --muted-foreground: 265 20.2% 65.1%;
+
+    --accent: 275 84% 76%;
+    --accent-foreground: 240 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 240 40% 98%;
+
+    --border: 265 40% 14%;
+    --input: 265 40% 14%;
+    --ring: 265 89% 70%;
+    
+    --sidebar-background: 265 40% 10%;
+    --sidebar-foreground: 240 40% 98%;
+    --sidebar-primary: 265 89% 70%;
+    --sidebar-primary-foreground: 240 40% 98%;
+    --sidebar-accent: 275 84% 76%;
+    --sidebar-accent-foreground: 240 40% 98%;
+    --sidebar-border: 265 40% 14%;
+    --sidebar-ring: 265 89% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  .finance-gradient {
+    @apply bg-gradient-to-r from-primary to-secondary;
+  }
+
+  .finance-card {
+    @apply bg-white dark:bg-card rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .purple-gradient {
+    @apply bg-gradient-to-br from-purple-400 to-purple-600;
+  }
+  
+  .blob-shape {
+    border-radius: 69% 31% 66% 34% / 21% 30% 70% 79%;
+  }
+}
