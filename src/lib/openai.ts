@@ -1,8 +1,17 @@
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1';
 
+if (!OPENAI_API_KEY) {
+  console.error('OpenAI API key is not set. Please check your environment variables.');
+}
+
 export async function analyzeReceipt(imageBase64: string) {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OpenAI API key is not configured');
+  }
+
   try {
+    console.log('Starting receipt analysis...');
     const response = await fetch(`${OPENAI_API_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -33,15 +42,20 @@ export async function analyzeReceipt(imageBase64: string) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to analyze receipt');
+      const errorData = await response.json();
+      console.error('OpenAI API Error:', errorData);
+      throw new Error(`Failed to analyze receipt: ${errorData.error?.message || response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('OpenAI API Response:', data);
+    
     const result = data.choices[0].message.content;
     if (!result) throw new Error('No result from OpenAI');
 
     // Parse the JSON response
     const parsedResult = JSON.parse(result);
+    console.log('Parsed Result:', parsedResult);
     return parsedResult;
   } catch (error) {
     console.error('Error analyzing receipt:', error);
@@ -50,7 +64,12 @@ export async function analyzeReceipt(imageBase64: string) {
 }
 
 export async function transcribeAudio(audioBlob: Blob) {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OpenAI API key is not configured');
+  }
+
   try {
+    console.log('Starting audio transcription...');
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.wav');
     formData.append('model', 'whisper-1');
@@ -64,10 +83,13 @@ export async function transcribeAudio(audioBlob: Blob) {
     });
 
     if (!response.ok) {
-      throw new Error('Transcription failed');
+      const errorData = await response.json();
+      console.error('OpenAI API Error:', errorData);
+      throw new Error(`Transcription failed: ${errorData.error?.message || response.statusText}`);
     }
 
     const result = await response.json();
+    console.log('Transcription Result:', result);
     return result.text;
   } catch (error) {
     console.error('Error transcribing audio:', error);
@@ -76,7 +98,12 @@ export async function transcribeAudio(audioBlob: Blob) {
 }
 
 export async function extractTransactionDetails(text: string) {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OpenAI API key is not configured');
+  }
+
   try {
+    console.log('Starting transaction details extraction...');
     const response = await fetch(`${OPENAI_API_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -100,15 +127,20 @@ export async function extractTransactionDetails(text: string) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to extract transaction details');
+      const errorData = await response.json();
+      console.error('OpenAI API Error:', errorData);
+      throw new Error(`Failed to extract transaction details: ${errorData.error?.message || response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('OpenAI API Response:', data);
+    
     const result = data.choices[0].message.content;
     if (!result) throw new Error('No result from OpenAI');
 
     // Parse the JSON response
     const parsedResult = JSON.parse(result);
+    console.log('Parsed Result:', parsedResult);
     return parsedResult;
   } catch (error) {
     console.error('Error extracting transaction details:', error);
