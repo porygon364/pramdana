@@ -1,4 +1,3 @@
-
 import { MainNavigation } from "@/components/MainNavigation";
 import { BalanceCard } from "@/components/BalanceCard";
 import { SpendingChart } from "@/components/SpendingChart";
@@ -8,8 +7,19 @@ import { GoalProgress } from "@/components/GoalProgress";
 import { SavingSuggestion } from "@/components/SavingSuggestion";
 import { IllustrationHero } from "@/components/IllustrationHero";
 import { UploadReceipt } from "@/components/UploadReceipt";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { TrendingUp } from "lucide-react";
 
 const Index = () => {
+  const spendingData = [
+    { category: "Housing", amount: 2000 },
+    { category: "Food", amount: 800 },
+    { category: "Transportation", amount: 500 },
+    { category: "Entertainment", amount: 300 },
+    { category: "Utilities", amount: 400 },
+    { category: "Other", amount: 200 },
+  ];
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <MainNavigation />
@@ -40,7 +50,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <SpendingChart />
+            <SpendingChart data={spendingData} />
             <ExpensesByCategoryChart />
           </div>
           
