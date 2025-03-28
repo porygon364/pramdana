@@ -17,7 +17,7 @@ const Index = () => {
     { category: "Transportation", amount: 500 },
     { category: "Entertainment", amount: 300 },
     { category: "Utilities", amount: 400 },
-    { category: "Other", amount: 200 },
+    { category: "Other", amount: 600 },
   ];
 
   return (
@@ -50,7 +50,14 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <SpendingChart data={spendingData} />
+            <Card>
+              <CardHeader>
+                <CardTitle>Spending by Category</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SpendingChart data={spendingData} />
+              </CardContent>
+            </Card>
             <ExpensesByCategoryChart />
           </div>
           

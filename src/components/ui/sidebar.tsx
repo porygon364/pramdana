@@ -155,7 +155,7 @@ const SidebarProvider = React.forwardRef<
 SidebarProvider.displayName = "SidebarProvider"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
-  ref?: React.RefObject<HTMLDivElement>;
+  ref?: React.Ref<HTMLDivElement>
 }
 
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
@@ -166,14 +166,13 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         className={cn("flex h-full w-64 flex-col border-r bg-background", className)}
         {...props}
       />
-    );
+    )
   }
-);
-
-Sidebar.displayName = "Sidebar";
+)
+Sidebar.displayName = "Sidebar"
 
 interface SidebarHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  ref?: React.RefObject<HTMLDivElement>;
+  ref?: React.Ref<HTMLDivElement>
 }
 
 const SidebarHeader = React.forwardRef<HTMLDivElement, SidebarHeaderProps>(
@@ -184,14 +183,13 @@ const SidebarHeader = React.forwardRef<HTMLDivElement, SidebarHeaderProps>(
         className={cn("flex h-14 items-center border-b px-4", className)}
         {...props}
       />
-    );
+    )
   }
-);
-
-SidebarHeader.displayName = "SidebarHeader";
+)
+SidebarHeader.displayName = "SidebarHeader"
 
 interface SidebarContentProps extends React.HTMLAttributes<HTMLDivElement> {
-  ref?: React.RefObject<HTMLDivElement>;
+  ref?: React.Ref<HTMLDivElement>
 }
 
 const SidebarContent = React.forwardRef<HTMLDivElement, SidebarContentProps>(
@@ -202,14 +200,13 @@ const SidebarContent = React.forwardRef<HTMLDivElement, SidebarContentProps>(
         className={cn("flex-1 overflow-auto py-2", className)}
         {...props}
       />
-    );
+    )
   }
-);
-
-SidebarContent.displayName = "SidebarContent";
+)
+SidebarContent.displayName = "SidebarContent"
 
 interface SidebarFooterProps extends React.HTMLAttributes<HTMLDivElement> {
-  ref?: React.RefObject<HTMLDivElement>;
+  ref?: React.Ref<HTMLDivElement>
 }
 
 const SidebarFooter = React.forwardRef<HTMLDivElement, SidebarFooterProps>(
@@ -220,14 +217,13 @@ const SidebarFooter = React.forwardRef<HTMLDivElement, SidebarFooterProps>(
         className={cn("flex h-14 items-center border-t px-4", className)}
         {...props}
       />
-    );
+    )
   }
-);
-
-SidebarFooter.displayName = "SidebarFooter";
+)
+SidebarFooter.displayName = "SidebarFooter"
 
 interface SidebarButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  ref?: React.RefObject<HTMLButtonElement>;
+  ref?: React.Ref<HTMLButtonElement>
 }
 
 const SidebarButton = React.forwardRef<HTMLButtonElement, SidebarButtonProps>(
@@ -236,19 +232,18 @@ const SidebarButton = React.forwardRef<HTMLButtonElement, SidebarButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "flex w-full items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+          "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
           className
         )}
         {...props}
       />
-    );
+    )
   }
-);
-
-SidebarButton.displayName = "SidebarButton";
+)
+SidebarButton.displayName = "SidebarButton"
 
 interface SidebarLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
-  ref?: React.RefObject<HTMLAnchorElement>;
+  ref?: React.Ref<HTMLAnchorElement>
 }
 
 const SidebarLink = React.forwardRef<HTMLAnchorElement, SidebarLinkProps>(
@@ -257,16 +252,15 @@ const SidebarLink = React.forwardRef<HTMLAnchorElement, SidebarLinkProps>(
       <a
         ref={ref}
         className={cn(
-          "flex w-full items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+          "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
           className
         )}
         {...props}
       />
-    );
+    )
   }
-);
-
-SidebarLink.displayName = "SidebarLink";
+)
+SidebarLink.displayName = "SidebarLink"
 
 const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
