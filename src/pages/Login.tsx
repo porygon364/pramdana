@@ -12,6 +12,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  console.log('Login component rendered');
+
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
@@ -29,25 +31,33 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    console.log('Login attempt started');
+
     if (!email || !password) {
-      toast.error('Please enter both email and password');
+      console.log('Validation failed:', { email: !!email, password: !!password });
+      toast.error('Please fill in all fields');
       return;
     }
 
-    setLoading(true);
-
     try {
+      setLoading(true);
+      console.log('Attempting to sign in with Supabase...');
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('Sign in response:', { data, error });
+
       if (error) {
-        throw error;
+        console.error('Sign in error:', error);
+        toast.error(error.message);
+        return;
       }
 
       if (data?.user) {
+        console.log('Sign in successful, user:', data.user);
         if (!data.user.email_confirmed_at) {
           toast.error('Please confirm your email before logging in');
           return;
@@ -56,10 +66,11 @@ const Login = () => {
         toast.success('Successfully logged in!');
         navigate('/dashboard');
       } else {
-        toast.error('Login failed - no user data returned');
+        console.log('No user data in response');
+        toast.error('Login failed - no user data received');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('Unexpected error during login:', error);
       if (error.message.includes('Invalid login credentials')) {
         toast.error('Invalid email or password');
       } else if (error.message.includes('Email not confirmed')) {
@@ -95,7 +106,10 @@ const Login = () => {
                   type="email" 
                   placeholder="name@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    console.log('Email input changed:', e.target.value);
+                    setEmail(e.target.value);
+                  }}
                   required
                 />
               </div>
@@ -110,7 +124,10 @@ const Login = () => {
                   id="password" 
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    console.log('Password input changed');
+                    setPassword(e.target.value);
+                  }}
                   required
                 />
               </div>
