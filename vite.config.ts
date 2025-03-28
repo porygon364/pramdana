@@ -15,16 +15,25 @@ export default defineConfig({
       'Content-Security-Policy': "default-src 'self'; connect-src 'self' https://*.supabase.co; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;"
     }
   },
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxImportSource: 'react',
+      plugins: [
+        ['@swc/plugin-transform-react-jsx', { runtime: 'automatic' }]
+      ]
+    })
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "react/jsx-runtime": "react/jsx-runtime.js",
+      "react/jsx-dev-runtime": "react/jsx-dev-runtime.js"
     },
   },
   build: {
     sourcemap: true,
     commonjsOptions: {
-      include: [/@supabase\/supabase-js/],
+      include: [/@supabase\/supabase-js/, /@radix-ui\/react-.*/],
     },
     rollupOptions: {
       output: {
@@ -35,6 +44,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['@supabase/supabase-js']
+    include: ['@supabase/supabase-js', 'react', 'react-dom']
   }
 });
