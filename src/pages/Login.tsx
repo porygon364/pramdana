@@ -2,57 +2,11 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link, useNavigate } from "react-router-dom";
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { Link } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-
-  const handleLogin = async () => {
-    try {
-      // Basic validation
-      if (!email || !password) {
-        alert('Please enter both email and password');
-        return;
-      }
-
-      // Log the attempt
-      console.log('Login attempt with:', { email });
-      
-      // Set loading state
-      setLoading(true);
-
-      // Attempt login
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      // Log the response
-      console.log('Login response:', { data, error });
-
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      if (data?.user) {
-        alert('Login successful!');
-        navigate('/dashboard');
-      } else {
-        alert('Login failed - no user data returned');
-      }
-    } catch (error: any) {
-      console.error('Login error:', error);
-      alert(error.message || 'Failed to login');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Test function to verify click handling
   const testClick = () => {
@@ -117,23 +71,6 @@ const Login = () => {
               }}
             >
               Test Button
-            </button>
-
-            {/* Login button */}
-            <button 
-              onClick={handleLogin}
-              style={{
-                width: '100%',
-                padding: '8px 16px',
-                backgroundColor: '#9333EA',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.5 : 1
-              }}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
             </button>
             
             <div className="text-center text-sm">
