@@ -7,13 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Mic, Receipt, Plus, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarIcon, Mic, Receipt, Plus, Loader2, Upload, Record } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/lib/supabase';
 import { useAccount } from '@/contexts/AccountContext';
 import { analyzeReceipt, transcribeAudio, extractTransactionDetails } from '@/lib/openai';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TransactionInputProps {
   onSuccess?: () => void;
@@ -24,6 +24,19 @@ interface Wallet {
   name: string;
   balance: number;
 }
+
+const CATEGORIES = [
+  'Food & Dining',
+  'Transportation',
+  'Shopping',
+  'Bills & Utilities',
+  'Entertainment',
+  'Health & Medical',
+  'Education',
+  'Travel',
+  'Gifts & Donations',
+  'Other'
+];
 
 const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
   const { toast } = useToast();
@@ -37,10 +50,10 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
   const [description, setDescription] = useState('');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [selectedWallet, setSelectedWallet] = useState<string>('');
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     loadWallets();
@@ -56,7 +69,8 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
         .from('wallets')
         .select('*')
         .eq('user_id', user.id)
-        .eq('type', accountType);
+        .eq('type', accountType)
+        .eq('is_active', true);
 
       if (error) throw error;
       setWallets(data || []);
@@ -144,13 +158,6 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleReceiptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setReceiptFile(file);
   };
 
   const processReceipt = async () => {
@@ -304,6 +311,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="amount">Amount</Label>
@@ -312,17 +320,24 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Enter amount"
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
-                <Input
-                  id="category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  required
-                />
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -333,6 +348,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                   id="place"
                   value={place}
                   onChange={(e) => setPlace(e.target.value)}
+                  placeholder="Enter place"
                   required
                 />
               </div>
@@ -363,6 +379,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter description"
               />
             </div>
 
@@ -378,7 +395,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleReceiptUpload}
+                onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
                 className="hidden"
                 id="receipt-upload"
                 disabled={processing}
@@ -387,7 +404,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                 htmlFor="receipt-upload"
                 className="cursor-pointer flex flex-col items-center"
               >
-                <Receipt className="h-12 w-12 text-muted-foreground mb-2" />
+                <Upload className="h-12 w-12 text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">
                   {receiptFile ? receiptFile.name : 'Click to upload receipt'}
                 </p>
@@ -404,7 +421,10 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                   Processing...
                 </>
               ) : (
-                'Process Receipt'
+                <>
+                  <Receipt className="h-4 w-4 mr-2" />
+                  Process Receipt
+                </>
               )}
             </Button>
           </div>
@@ -424,7 +444,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                 {processing ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
-                  <Mic className="h-6 w-6" />
+                  <Record className="h-6 w-6" />
                 )}
               </Button>
             </div>

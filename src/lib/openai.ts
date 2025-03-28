@@ -19,14 +19,18 @@ export async function analyzeReceipt(imageBase64: string) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4-vision-preview",
+        model: "gpt-3.5-turbo",
         messages: [
+          {
+            role: "system",
+            content: "You are a receipt analysis assistant. Extract the following information from the receipt: total amount, date, merchant name, and items purchased. Format the response as JSON with these fields: amount, date, place, items."
+          },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Extract the following information from this receipt: total amount, date, merchant name, and items purchased. Format the response as JSON with these fields: amount, date, place, items."
+                text: "Please analyze this receipt and extract the key information."
               },
               {
                 type: "image_url",
@@ -115,7 +119,7 @@ export async function extractTransactionDetails(text: string) {
         messages: [
           {
             role: "system",
-            content: "Extract transaction details from the text. Format the response as JSON with these fields: amount, category, place, date (in ISO format), description."
+            content: "You are a transaction analysis assistant. Extract transaction details from the text. Format the response as JSON with these fields: amount, category, place, date (in ISO format), description. Use common expense categories like Food, Transport, Shopping, Bills, etc."
           },
           {
             role: "user",
