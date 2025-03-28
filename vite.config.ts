@@ -23,8 +23,10 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    commonjsOptions: {
+      include: [/@supabase\/supabase-js/],
+    },
     rollupOptions: {
-      external: ['@supabase/supabase-js'],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
