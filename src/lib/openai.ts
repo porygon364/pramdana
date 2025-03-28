@@ -23,7 +23,7 @@ export async function analyzeReceipt(imageBase64: string) {
         messages: [
           {
             role: "system",
-            content: "You are a receipt analysis assistant. Extract the following information from the receipt: total amount, date, merchant name, and items purchased. Format the response as JSON with these fields: amount, date, place, items."
+            content: "You are a receipt analysis assistant. Extract the following information from the receipt: total amount, date, merchant name, and items purchased. Format the response as JSON with these fields: amount (number), date (YYYY-MM-DD), place (string), items (array of strings). If any field is unclear, use null."
           },
           {
             role: "user",
@@ -60,7 +60,14 @@ export async function analyzeReceipt(imageBase64: string) {
     // Parse the JSON response
     const parsedResult = JSON.parse(result);
     console.log('Parsed Result:', parsedResult);
-    return parsedResult;
+
+    // Validate and format the result
+    return {
+      amount: parsedResult.amount || 0,
+      date: parsedResult.date || new Date().toISOString().split('T')[0],
+      place: parsedResult.place || '',
+      items: Array.isArray(parsedResult.items) ? parsedResult.items : []
+    };
   } catch (error) {
     console.error('Error analyzing receipt:', error);
     throw error;

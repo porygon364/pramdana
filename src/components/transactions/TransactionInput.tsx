@@ -50,6 +50,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
   const [description, setDescription] = useState('');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [hasRecording, setHasRecording] = useState(false);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [selectedWallet, setSelectedWallet] = useState<string>('');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -273,6 +274,43 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
       setIsRecording(false);
+      setHasRecording(true);
+    }
+  };
+
+  const analyzeRecording = async () => {
+    if (!hasRecording || audioChunksRef.current.length === 0) return;
+
+    try {
+      setProcessing(true);
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+      const transcribedText = await transcribeAudio(audioBlob);
+      const result = await extractTransactionDetails(transcribedText);
+      
+      // Pre-fill the form with extracted data
+      setAmount(result.amount.toString());
+      setCategory(result.category);
+      setPlace(result.place);
+      setDate(new Date(result.date));
+      setDescription(result.description);
+      
+      toast({
+        title: "Success",
+        description: "Voice input processed successfully!",
+      });
+
+      // Reset recording state
+      setHasRecording(false);
+      audioChunksRef.current = [];
+    } catch (error) {
+      console.error('Error processing voice input:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to process voice input. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -432,7 +470,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
 
         <TabsContent value="voice">
           <div className="space-y-4">
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center space-y-4">
               <Button
                 type="button"
                 variant={isRecording ? "destructive" : "default"}
@@ -447,10 +485,20 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                   <Record className="h-6 w-6" />
                 )}
               </Button>
+              <p className="text-center text-sm text-muted-foreground">
+                {isRecording ? 'Recording... Click to stop' : 'Click to start recording'}
+              </p>
+              {hasRecording && !processing && (
+                <Button
+                  type="button"
+                  onClick={analyzeRecording}
+                  className="w-full"
+                >
+                  <Mic className="h-4 w-4 mr-2" />
+                  Analyze Recording
+                </Button>
+              )}
             </div>
-            <p className="text-center text-sm text-muted-foreground">
-              {isRecording ? 'Recording... Click to stop' : 'Click to start recording'}
-            </p>
           </div>
         </TabsContent>
       </Tabs>
