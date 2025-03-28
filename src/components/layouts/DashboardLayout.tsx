@@ -73,19 +73,21 @@ const DashboardLayout = () => {
           isMobileMenuOpen ? "block" : "hidden"
         )}>
           <div className="p-4">
-            <TabsList className="w-full flex-col h-auto">
-              {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="w-full justify-start gap-2 h-12"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <tab.icon className="h-5 w-5" />
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <Tabs value={currentTab} className="w-full">
+              <TabsList className="w-full flex-col h-auto">
+                {tabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="w-full justify-start gap-2 h-12"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <tab.icon className="h-5 w-5" />
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           </div>
         </div>
 
@@ -93,18 +95,20 @@ const DashboardLayout = () => {
         <div className="hidden md:flex w-64 border-r">
           <div className="w-full p-4">
             <span className="text-xl font-bold">Union</span>
-            <TabsList className="w-full flex-col h-auto mt-8">
-              {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="w-full justify-start gap-2 h-12"
-                >
-                  <tab.icon className="h-5 w-5" />
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <Tabs value={currentTab} className="w-full mt-8">
+              <TabsList className="w-full flex-col h-auto">
+                {tabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="w-full justify-start gap-2 h-12"
+                  >
+                    <tab.icon className="h-5 w-5" />
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           </div>
         </div>
 
