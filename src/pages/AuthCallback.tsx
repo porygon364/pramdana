@@ -1,41 +1,40 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { Loader2 } from "lucide-react";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
-          throw error;
-        }
+        
+        if (error) throw error;
 
         if (session) {
-          toast.success('Email confirmed successfully!');
-          navigate('/dashboard');
+          // Get the attempted path from state or default to dashboard
+          const attemptedPath = location.state?.from || '/dashboard';
+          navigate(attemptedPath);
         } else {
-          toast.error('Failed to confirm email. Please try again.');
           navigate('/login');
         }
-      } catch (error: any) {
-        toast.error(error.message || 'An error occurred');
+      } catch (error) {
+        console.error('Auth callback error:', error);
         navigate('/login');
       }
     };
 
     handleAuthCallback();
-  }, [navigate]);
+  }, [navigate, location]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-4">Confirming your email...</h2>
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+        <p className="text-muted-foreground">Completing authentication...</p>
       </div>
     </div>
   );

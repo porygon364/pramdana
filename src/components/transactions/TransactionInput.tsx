@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +13,16 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/lib/supabase';
 import { useAccount } from '@/contexts/AccountContext';
 import { analyzeReceipt, transcribeAudio, extractTransactionDetails } from '@/lib/openai';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TransactionInputProps {
   onSuccess?: () => void;
+}
+
+interface Wallet {
+  id: string;
+  name: string;
+  balance: number;
 }
 
 const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
@@ -32,10 +39,45 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [selectedWallet, setSelectedWallet] = useState<string>('');
+
+  useEffect(() => {
+    loadWallets();
+  }, [accountType]);
+
+  const loadWallets = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error('No user found');
+
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('type', accountType);
+
+      if (error) throw error;
+      setWallets(data || []);
+      
+      // Set first wallet as default if available
+      if (data && data.length > 0) {
+        setSelectedWallet(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading wallets:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load wallets. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !category || !place) {
+    if (!amount || !category || !place || !selectedWallet) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -50,19 +92,31 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       
       if (!user) throw new Error('No user found');
 
-      const { error } = await supabase
+      // Start a transaction
+      const { data: transaction, error: transactionError } = await supabase
         .from('transactions')
         .insert({
           user_id: user.id,
-          account_type: accountType,
+          wallet_id: selectedWallet,
           amount: parseFloat(amount),
           category,
           place,
           transaction_date: date.toISOString(),
           description,
-        });
+          account_type: accountType,
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (transactionError) throw transactionError;
+
+      // Update wallet balance
+      const { error: walletError } = await supabase.rpc('update_wallet_balance', {
+        p_wallet_id: selectedWallet,
+        p_amount: parseFloat(amount)
+      });
+
+      if (walletError) throw walletError;
 
       toast({
         title: "Success",
@@ -75,6 +129,9 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       setPlace('');
       setDescription('');
       setDate(new Date());
+
+      // Reload wallets to update balances
+      loadWallets();
 
       onSuccess?.();
     } catch (error) {
@@ -232,6 +289,21 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
 
         <TabsContent value="manual">
           <form onSubmit={handleManualSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="wallet">Wallet</Label>
+              <Select value={selectedWallet} onValueChange={setSelectedWallet}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a wallet" />
+                </SelectTrigger>
+                <SelectContent>
+                  {wallets.map((wallet) => (
+                    <SelectItem key={wallet.id} value={wallet.id}>
+                      {wallet.name} (${wallet.balance.toFixed(2)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="amount">Amount</Label>
