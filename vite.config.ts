@@ -5,8 +5,8 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig({
   server: {
-    host: "::",
-    port: 8080,
+    host: true,
+    port: 3000,
     headers: {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
@@ -19,10 +19,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "react": "react/dist/react.js",
-      "react-dom": "react-dom/dist/react-dom.js",
-      "react/jsx-runtime": "react/jsx-runtime.js",
-      "react/jsx-dev-runtime": "react/jsx-dev-runtime.js"
+      "react": path.resolve(__dirname, "./node_modules/react"),
+      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
     },
   },
   build: {
@@ -33,7 +31,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
+          vendor: ["react", "react-dom"],
         },
       },
     },
