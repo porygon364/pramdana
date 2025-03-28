@@ -15,30 +15,47 @@ export default defineConfig({
       'Content-Security-Policy': "default-src 'self'; connect-src 'self' https://*.supabase.co; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;"
     }
   },
-  plugins: [react()],
+  plugins: [react({
+    jsxRuntime: 'automatic'
+  })],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "react": path.resolve(__dirname, "./node_modules/react"),
-      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
-      "react/jsx-runtime": path.resolve(__dirname, "./node_modules/react/jsx-runtime"),
-      "react/jsx-dev-runtime": path.resolve(__dirname, "./node_modules/react/jsx-dev-runtime"),
-    },
+      "@": path.resolve(__dirname, "./src")
+    }
   },
   build: {
     sourcemap: true,
     commonjsOptions: {
-      include: [/@supabase\/supabase-js/, /@radix-ui\/react-.*/],
+      include: [/node_modules/],
+      transformMixedEsModules: true
     },
     rollupOptions: {
+      external: ['react/jsx-runtime'],
       output: {
-        manualChunks: {
-          vendor: ["react", "react-dom"],
-        },
-      },
-    },
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) {
+              return 'react-vendor';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'radix-vendor';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react/jsx-runtime"],
+    include: [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      '@radix-ui/react-context',
+      '@radix-ui/react-compose-refs'
+    ],
+    esbuildOptions: {
+      target: 'es2020'
+    }
   }
 });
