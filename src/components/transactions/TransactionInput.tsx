@@ -66,19 +66,42 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       
       if (!user) throw new Error('No user found');
 
-      const { data, error } = await supabase
+      // First, get all wallets for the user and account type
+      const { data: allWallets, error: walletsError } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('type', accountType);
+
+      if (walletsError) throw walletsError;
+
+      // Then, get the active wallet
+      const { data: activeWallet, error: activeError } = await supabase
         .from('wallets')
         .select('*')
         .eq('user_id', user.id)
         .eq('type', accountType)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .single();
 
-      if (error) throw error;
-      setWallets(data || []);
+      if (activeError && activeError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        throw activeError;
+      }
+
+      // Set all wallets for the dropdown
+      setWallets(allWallets || []);
       
-      // Set first wallet as default if available
-      if (data && data.length > 0) {
-        setSelectedWallet(data[0].id);
+      // Set the active wallet as selected
+      if (activeWallet) {
+        setSelectedWallet(activeWallet.id);
+      } else if (allWallets && allWallets.length > 0) {
+        // If no active wallet, set the first one as active
+        const firstWallet = allWallets[0];
+        await supabase
+          .from('wallets')
+          .update({ is_active: true })
+          .eq('id', firstWallet.id);
+        setSelectedWallet(firstWallet.id);
       }
     } catch (error) {
       console.error('Error loading wallets:', error);
@@ -178,7 +201,9 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
           // Pre-fill the form with extracted data
           setAmount(result.amount.toString());
           setPlace(result.place);
-          setDate(new Date(result.date));
+          // Fix date handling
+          const parsedDate = result.date ? new Date(result.date) : new Date();
+          setDate(parsedDate);
           setDescription(`Items: ${result.items.join(', ')}`);
           
           toast({
@@ -238,7 +263,9 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
           setAmount(result.amount.toString());
           setCategory(result.category);
           setPlace(result.place);
-          setDate(new Date(result.date));
+          // Fix date handling
+          const parsedDate = result.date ? new Date(result.date) : new Date();
+          setDate(parsedDate);
           setDescription(result.description);
           
           toast({
@@ -291,7 +318,9 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       setAmount(result.amount.toString());
       setCategory(result.category);
       setPlace(result.place);
-      setDate(new Date(result.date));
+      // Fix date handling
+      const parsedDate = result.date ? new Date(result.date) : new Date();
+      setDate(parsedDate);
       setDescription(result.description);
       
       toast({

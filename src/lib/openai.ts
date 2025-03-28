@@ -1,9 +1,15 @@
+import OpenAI from 'openai';
+
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1';
 
 if (!OPENAI_API_KEY) {
-  console.error('OpenAI API key is not set. Please check your environment variables.');
+  console.warn('OpenAI API key is not configured');
 }
+
+const openai = new OpenAI({
+  apiKey: OPENAI_API_KEY,
+});
 
 export async function analyzeReceipt(imageBase64: string) {
   if (!OPENAI_API_KEY) {
@@ -80,7 +86,6 @@ export async function transcribeAudio(audioBlob: Blob) {
   }
 
   try {
-    console.log('Starting audio transcription...');
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.wav');
     formData.append('model', 'whisper-1');
@@ -96,12 +101,11 @@ export async function transcribeAudio(audioBlob: Blob) {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenAI API Error:', errorData);
-      throw new Error(`Transcription failed: ${errorData.error?.message || response.statusText}`);
+      throw new Error(`Failed to transcribe audio: ${errorData.error?.message || response.statusText}`);
     }
 
-    const result = await response.json();
-    console.log('Transcription Result:', result);
-    return result.text;
+    const data = await response.json();
+    return data.text;
   } catch (error) {
     console.error('Error transcribing audio:', error);
     throw error;
@@ -114,7 +118,6 @@ export async function extractTransactionDetails(text: string) {
   }
 
   try {
-    console.log('Starting transaction details extraction...');
     const response = await fetch(`${OPENAI_API_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -126,14 +129,14 @@ export async function extractTransactionDetails(text: string) {
         messages: [
           {
             role: "system",
-            content: "You are a transaction analysis assistant. Extract transaction details from the text. Format the response as JSON with these fields: amount, category, place, date (in ISO format), description. Use common expense categories like Food, Transport, Shopping, Bills, etc."
+            content: "You are a transaction analysis assistant. Extract the following information from the text: amount, category, place, date, and description. Use common expense categories like 'Food & Dining', 'Transportation', 'Shopping', 'Bills & Utilities', 'Entertainment', 'Health & Medical', 'Education', 'Travel', 'Gifts & Donations', or 'Other'. Format the response as JSON with these fields: amount (number), category (string), place (string), date (YYYY-MM-DD), description (string). If any field is unclear, use null."
           },
           {
             role: "user",
             content: text
           }
         ],
-        max_tokens: 200
+        max_tokens: 500
       })
     });
 
@@ -144,15 +147,21 @@ export async function extractTransactionDetails(text: string) {
     }
 
     const data = await response.json();
-    console.log('OpenAI API Response:', data);
-    
     const result = data.choices[0].message.content;
     if (!result) throw new Error('No result from OpenAI');
 
     // Parse the JSON response
     const parsedResult = JSON.parse(result);
     console.log('Parsed Result:', parsedResult);
-    return parsedResult;
+
+    // Validate and format the result
+    return {
+      amount: parsedResult.amount || 0,
+      category: parsedResult.category || 'Other',
+      place: parsedResult.place || '',
+      date: parsedResult.date || new Date().toISOString().split('T')[0],
+      description: parsedResult.description || ''
+    };
   } catch (error) {
     console.error('Error extracting transaction details:', error);
     throw error;
