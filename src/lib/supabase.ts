@@ -3,7 +3,13 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+console.log('Initializing Supabase client with URL:', supabaseUrl);
+
 if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing environment variables:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey
+  });
   throw new Error('Missing Supabase environment variables')
 }
 
@@ -15,7 +21,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: {
       getItem: (key) => {
         try {
-          return localStorage.getItem(key)
+          const value = localStorage.getItem(key);
+          console.log(`Getting item from storage: ${key}`);
+          return value;
         } catch (error) {
           console.error('Error accessing localStorage:', error)
           return null
@@ -23,6 +31,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       },
       setItem: (key, value) => {
         try {
+          console.log(`Setting item in storage: ${key}`);
           localStorage.setItem(key, value)
         } catch (error) {
           console.error('Error setting localStorage:', error)
@@ -30,6 +39,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       },
       removeItem: (key) => {
         try {
+          console.log(`Removing item from storage: ${key}`);
           localStorage.removeItem(key)
         } catch (error) {
           console.error('Error removing from localStorage:', error)
@@ -37,4 +47,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       }
     }
   }
-}) 
+})
+
+// Test the connection
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth state changed:', event, session);
+}); 
