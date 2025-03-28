@@ -1,15 +1,9 @@
-import OpenAI from 'openai';
-
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1';
 
 if (!OPENAI_API_KEY) {
   console.warn('OpenAI API key is not configured');
 }
-
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-});
 
 export async function analyzeReceipt(imageBase64: string) {
   if (!OPENAI_API_KEY) {
