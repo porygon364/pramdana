@@ -21,7 +21,6 @@ import { useToast } from "@/components/ui/use-toast";
 
 const DashboardLayout = () => {
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [activeSheet, setActiveSheet] = React.useState<'manual' | 'voice' | null>(null);
   const { toast } = useToast();
 
@@ -59,38 +58,11 @@ const DashboardLayout = () => {
       {/* Mobile Header */}
       <div className="md:hidden border-b">
         <div className="flex items-center justify-between p-4">
-          <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </Button>
           <span className="text-xl font-bold">Union</span>
         </div>
       </div>
 
       <div className="flex h-[calc(100vh-4rem)] md:h-screen">
-        {/* Mobile Menu */}
-        <div className={cn(
-          "fixed inset-0 z-50 bg-background md:hidden",
-          isMobileMenuOpen ? "block" : "hidden"
-        )}>
-          <div className="p-4">
-            <Tabs value={currentTab} className="w-full">
-              <TabsList className="w-full flex-col h-auto">
-                {tabs.map((tab) => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className="w-full justify-start gap-2 h-12"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <tab.icon className="h-5 w-5" />
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-          </div>
-        </div>
-
         {/* Desktop Sidebar */}
         <div className="hidden md:flex w-64 border-r">
           <div className="w-full p-4">
@@ -98,14 +70,15 @@ const DashboardLayout = () => {
             <Tabs value={currentTab} className="w-full mt-8">
               <TabsList className="w-full flex-col h-auto">
                 {tabs.map((tab) => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className="w-full justify-start gap-2 h-12"
-                  >
-                    <tab.icon className="h-5 w-5" />
-                    {tab.label}
-                  </TabsTrigger>
+                  <Link key={tab.value} to={tab.path}>
+                    <TabsTrigger
+                      value={tab.value}
+                      className="w-full justify-start gap-2 h-12"
+                    >
+                      <tab.icon className="h-5 w-5" />
+                      {tab.label}
+                    </TabsTrigger>
+                  </Link>
                 ))}
               </TabsList>
             </Tabs>
@@ -113,7 +86,7 @@ const DashboardLayout = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-auto relative">
+        <div className="flex-1 overflow-auto relative pb-16 md:pb-0">
           <div className="container mx-auto p-4 md:p-6">
             <Outlet />
           </div>
@@ -166,6 +139,25 @@ const DashboardLayout = () => {
             </Sheet>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background">
+        <Tabs value={currentTab} className="w-full">
+          <TabsList className="w-full grid grid-cols-4">
+            {tabs.map((tab) => (
+              <Link key={tab.value} to={tab.path}>
+                <TabsTrigger
+                  value={tab.value}
+                  className="w-full flex-col h-16"
+                >
+                  <tab.icon className="h-5 w-5" />
+                  <span className="text-xs mt-1">{tab.label}</span>
+                </TabsTrigger>
+              </Link>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
     </div>
   );
