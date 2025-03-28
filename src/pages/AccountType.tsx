@@ -2,91 +2,112 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, User, Building2, ChevronRight } from "lucide-react";
+import { User, Users, Building2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+
+interface AccountType {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+const accountTypes: AccountType[] = [
+  {
+    id: 'personal',
+    name: 'Personal',
+    description: 'Manage your personal finances and expenses',
+    icon: <User className="h-8 w-8" />,
+  },
+  {
+    id: 'family',
+    name: 'Family & Friends',
+    description: 'Track shared expenses with family and friends',
+    icon: <Users className="h-8 w-8" />,
+  },
+  {
+    id: 'business',
+    name: 'Business',
+    description: 'Manage business transactions and expenses',
+    icon: <Building2 className="h-8 w-8" />,
+  },
+];
 
 const AccountType = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [selectedType, setSelectedType] = React.useState<string | null>(null);
 
-  const accountTypes = [
-    {
-      title: "Personal",
-      description: "Perfect for managing your personal finances",
-      icon: User,
-      color: "from-blue-500 to-blue-700",
-      features: [
-        "Personal expense tracking",
-        "Individual savings goals",
-        "Personal financial insights"
-      ]
-    },
-    {
-      title: "Family & Friends",
-      description: "Share and manage finances with your loved ones",
-      icon: Users,
-      color: "from-purple-500 to-purple-700",
-      features: [
-        "Shared expense tracking",
-        "Group savings goals",
-        "Family financial insights",
-        "Split bills easily"
-      ]
-    },
-    {
-      title: "Business",
-      description: "Professional financial management for your business",
-      icon: Building2,
-      color: "from-green-500 to-green-700",
-      features: [
-        "Business expense tracking",
-        "Team financial management",
-        "Business analytics",
-        "Invoice management"
-      ]
+  const handleSelect = (typeId: string) => {
+    setSelectedType(typeId);
+  };
+
+  const handleContinue = () => {
+    if (!selectedType) {
+      toast({
+        title: "Error",
+        description: "Please select an account type",
+        variant: "destructive",
+      });
+      return;
     }
-  ];
+
+    // Save the selected account type
+    localStorage.setItem('accountType', selectedType);
+    
+    toast({
+      title: "Success",
+      description: "Account type selected successfully!",
+    });
+
+    // Navigate to dashboard
+    navigate('/dashboard', { replace: true });
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-purple-50 dark:from-background dark:to-purple-950/20">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Choose Your <span className="bg-gradient-to-r from-purple-500 to-purple-700 bg-clip-text text-transparent">Account Type</span>
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Select the type of account that best fits your needs. You can always change this later.
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">Choose Your Account Type</h1>
+          <p className="text-muted-foreground">
+            Select the type of account that best suits your needs
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {accountTypes.map((type) => (
             <Card
-              key={type.title}
-              className="p-6 hover:shadow-lg transition-shadow cursor-pointer group"
-              onClick={() => navigate(`/dashboard/${type.title.toLowerCase()}`)}
+              key={type.id}
+              className={`p-6 cursor-pointer transition-colors ${
+                selectedType === type.id
+                  ? 'border-primary bg-primary/5'
+                  : 'hover:bg-muted/50'
+              }`}
+              onClick={() => handleSelect(type.id)}
             >
-              <div className="flex flex-col h-full">
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${type.color} flex items-center justify-center mb-4`}>
-                  <type.icon className="h-6 w-6 text-white" />
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
+                  {type.icon}
                 </div>
-                <h3 className="text-xl font-bold mb-2">{type.title}</h3>
-                <p className="text-muted-foreground mb-4 flex-grow">{type.description}</p>
-                <ul className="space-y-2 mb-6">
-                  {type.features.map((feature) => (
-                    <li key={feature} className="flex items-center text-sm">
-                      <svg className="h-4 w-4 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full group-hover:translate-x-2 transition-transform">
-                  Select {type.title}
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
+                <div>
+                  <h3 className="font-medium">{type.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {type.description}
+                  </p>
+                </div>
               </div>
             </Card>
           ))}
+        </div>
+
+        <div className="flex justify-center">
+          <Button
+            size="lg"
+            onClick={handleContinue}
+            disabled={!selectedType}
+          >
+            Continue
+          </Button>
         </div>
       </div>
     </div>
