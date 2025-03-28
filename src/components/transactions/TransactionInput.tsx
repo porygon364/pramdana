@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Mic, Receipt, Plus, Loader2, Upload, Record } from "lucide-react";
+import { CalendarIcon, Mic, Receipt, Plus, Loader2, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/lib/supabase';
@@ -482,7 +482,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                 {processing ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
-                  <Record className="h-6 w-6" />
+                  <Mic className="h-6 w-6" />
                 )}
               </Button>
               <p className="text-center text-sm text-muted-foreground">
