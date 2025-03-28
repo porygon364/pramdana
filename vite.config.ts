@@ -15,17 +15,12 @@ export default defineConfig({
       'Content-Security-Policy': "default-src 'self'; connect-src 'self' https://*.supabase.co; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;"
     }
   },
-  plugins: [
-    react({
-      jsxImportSource: 'react',
-      plugins: [
-        ['@swc/plugin-transform-react-jsx', { runtime: 'automatic' }]
-      ]
-    })
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "react": "react/dist/react.js",
+      "react-dom": "react-dom/dist/react-dom.js",
       "react/jsx-runtime": "react/jsx-runtime.js",
       "react/jsx-dev-runtime": "react/jsx-dev-runtime.js"
     },
