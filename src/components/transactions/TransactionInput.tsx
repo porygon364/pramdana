@@ -7,11 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Mic, Receipt, Plus } from "lucide-react";
+import { CalendarIcon, Mic, Receipt, Plus, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/lib/supabase';
 import { useAccount } from '@/contexts/AccountContext';
+import { analyzeReceipt, transcribeAudio, extractTransactionDetails } from '@/lib/openai';
 
 interface TransactionInputProps {
   onSuccess?: () => void;
@@ -21,6 +22,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
   const { toast } = useToast();
   const { accountType } = useAccount();
   const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -52,7 +54,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
         .from('transactions')
         .insert({
           user_id: user.id,
-          account_type,
+          account_type: accountType,
           amount: parseFloat(amount),
           category,
           place,
@@ -92,10 +94,44 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
     if (!file) return;
 
     setReceiptFile(file);
-    // Here you would typically:
-    // 1. Upload the receipt to storage
-    // 2. Use OCR to extract transaction details
-    // 3. Pre-fill the form with extracted data
+  };
+
+  const processReceipt = async () => {
+    if (!receiptFile) return;
+
+    try {
+      setProcessing(true);
+      const reader = new FileReader();
+      
+      reader.onload = async (e) => {
+        const base64String = e.target?.result as string;
+        const base64Data = base64String.split(',')[1];
+        
+        const result = await analyzeReceipt(base64Data);
+        
+        // Pre-fill the form with extracted data
+        setAmount(result.amount.toString());
+        setPlace(result.place);
+        setDate(new Date(result.date));
+        setDescription(`Items: ${result.items.join(', ')}`);
+        
+        toast({
+          title: "Success",
+          description: "Receipt processed successfully!",
+        });
+      };
+
+      reader.readAsDataURL(receiptFile);
+    } catch (error) {
+      console.error('Error processing receipt:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process receipt. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const startRecording = async () => {
@@ -111,10 +147,32 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        // Here you would typically:
-        // 1. Upload the audio file
-        // 2. Use speech-to-text to extract transaction details
-        // 3. Pre-fill the form with extracted data
+        try {
+          setProcessing(true);
+          const transcribedText = await transcribeAudio(audioBlob);
+          const result = await extractTransactionDetails(transcribedText);
+          
+          // Pre-fill the form with extracted data
+          setAmount(result.amount.toString());
+          setCategory(result.category);
+          setPlace(result.place);
+          setDate(new Date(result.date));
+          setDescription(result.description);
+          
+          toast({
+            title: "Success",
+            description: "Voice input processed successfully!",
+          });
+        } catch (error) {
+          console.error('Error processing voice input:', error);
+          toast({
+            title: "Error",
+            description: "Failed to process voice input. Please try again.",
+            variant: "destructive",
+          });
+        } finally {
+          setProcessing(false);
+        }
       };
 
       mediaRecorder.start();
@@ -234,6 +292,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                 onChange={handleReceiptUpload}
                 className="hidden"
                 id="receipt-upload"
+                disabled={processing}
               />
               <label
                 htmlFor="receipt-upload"
@@ -245,8 +304,19 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                 </p>
               </label>
             </div>
-            <Button className="w-full" disabled={!receiptFile}>
-              Process Receipt
+            <Button 
+              className="w-full" 
+              disabled={!receiptFile || processing}
+              onClick={processReceipt}
+            >
+              {processing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Process Receipt'
+              )}
             </Button>
           </div>
         </TabsContent>
@@ -260,8 +330,13 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
                 size="lg"
                 className="rounded-full w-16 h-16"
                 onClick={isRecording ? stopRecording : startRecording}
+                disabled={processing}
               >
-                <Mic className="h-6 w-6" />
+                {processing ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  <Mic className="h-6 w-6" />
+                )}
               </Button>
             </div>
             <p className="text-center text-sm text-muted-foreground">
