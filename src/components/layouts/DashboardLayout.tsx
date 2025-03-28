@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useLocation, Link } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +21,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 const DashboardLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeSheet, setActiveSheet] = React.useState<'manual' | 'voice' | null>(null);
   const { toast } = useToast();
 
@@ -32,6 +33,13 @@ const DashboardLayout = () => {
   ];
 
   const currentTab = tabs.find(tab => location.pathname.startsWith(tab.path))?.value || "wallets";
+
+  const handleTabChange = (value: string) => {
+    const tab = tabs.find(t => t.value === value);
+    if (tab) {
+      navigate(tab.path);
+    }
+  };
 
   const handleTransactionSubmit = (data: any) => {
     // Here you would typically send the data to your backend
@@ -67,18 +75,17 @@ const DashboardLayout = () => {
         <div className="hidden md:flex w-64 border-r">
           <div className="w-full p-4">
             <span className="text-xl font-bold">Union</span>
-            <Tabs value={currentTab} className="w-full mt-8">
+            <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full mt-8">
               <TabsList className="w-full flex-col h-auto">
                 {tabs.map((tab) => (
-                  <Link key={tab.value} to={tab.path}>
-                    <TabsTrigger
-                      value={tab.value}
-                      className="w-full justify-start gap-2 h-12"
-                    >
-                      <tab.icon className="h-5 w-5" />
-                      {tab.label}
-                    </TabsTrigger>
-                  </Link>
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="w-full justify-start gap-2 h-12"
+                  >
+                    <tab.icon className="h-5 w-5" />
+                    {tab.label}
+                  </TabsTrigger>
                 ))}
               </TabsList>
             </Tabs>
@@ -143,18 +150,17 @@ const DashboardLayout = () => {
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background">
-        <Tabs value={currentTab} className="w-full">
+        <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="w-full grid grid-cols-4">
             {tabs.map((tab) => (
-              <Link key={tab.value} to={tab.path}>
-                <TabsTrigger
-                  value={tab.value}
-                  className="w-full flex-col h-16"
-                >
-                  <tab.icon className="h-5 w-5" />
-                  <span className="text-xs mt-1">{tab.label}</span>
-                </TabsTrigger>
-              </Link>
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="w-full flex-col h-16"
+              >
+                <tab.icon className="h-5 w-5" />
+                <span className="text-xs mt-1">{tab.label}</span>
+              </TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
