@@ -24,11 +24,21 @@ interface Transaction {
   transaction_date: string;
 }
 
+interface CategoryBreakdown {
+  category: string;
+  amount: number;
+}
+
+interface MonthlySpending {
+  month: string;
+  amount: number;
+}
+
 interface AnalyticsData {
   totalSpent: number;
-  categoryBreakdown: { category: string; amount: number }[];
-  monthlySpending: { month: string; amount: number }[];
-  topCategories: { category: string; amount: number }[];
+  categoryBreakdown: CategoryBreakdown[];
+  monthlySpending: MonthlySpending[];
+  topCategories: CategoryBreakdown[];
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
@@ -73,28 +83,28 @@ const TransactionAnalytics = () => {
       const totalSpent = transactions.reduce((sum, t) => sum + t.amount, 0);
       
       // Category breakdown
-      const categoryBreakdown = transactions.reduce((acc, t) => {
-        const existing = acc.find(c => c.category === t.category);
+      const categoryBreakdown = transactions.reduce((acc: CategoryBreakdown[], t) => {
+        const existing = acc.find((c: CategoryBreakdown) => c.category === t.category);
         if (existing) {
           existing.amount += t.amount;
         } else {
           acc.push({ category: t.category, amount: t.amount });
         }
         return acc;
-      }, [] as { category: string; amount: number }[]);
+      }, []);
 
       // Monthly spending
-      const monthlySpending = transactions.reduce((acc, t) => {
+      const monthlySpending = transactions.reduce((acc: MonthlySpending[], t) => {
         const date = new Date(t.transaction_date);
         const month = date.toLocaleString('default', { month: 'short', year: 'numeric' });
-        const existing = acc.find(m => m.month === month);
+        const existing = acc.find((m: MonthlySpending) => m.month === month);
         if (existing) {
           existing.amount += t.amount;
         } else {
           acc.push({ month, amount: t.amount });
         }
         return acc;
-      }, [] as { month: string; amount: number }[]);
+      }, []);
 
       // Top categories
       const topCategories = [...categoryBreakdown]
