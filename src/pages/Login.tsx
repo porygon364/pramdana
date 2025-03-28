@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,26 +13,54 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate('/dashboard');
+      }
+    };
+    checkUser();
+  }, [navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      console.log('Attempting login with:', { email }); // Log login attempt
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Login error:', error); // Log detailed error
         throw error;
       }
 
       if (data?.user) {
+        // Check if email is confirmed
+        if (!data.user.email_confirmed_at) {
+          toast.error('Please confirm your email before logging in');
+          return;
+        }
+
+        console.log('Login successful:', data.user); // Log successful login
         toast.success('Successfully logged in!');
-        navigate('/dashboard'); // or wherever you want to redirect after login
+        navigate('/dashboard');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to login');
+      console.error('Login error details:', error); // Log detailed error
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password');
+      } else if (error.message.includes('Email not confirmed')) {
+        toast.error('Please confirm your email before logging in');
+      } else {
+        toast.error(error.message || 'Failed to login');
+      }
     } finally {
       setLoading(false);
     }
