@@ -1,16 +1,14 @@
-
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Sample spending data
-const data = [
-  { name: 'Jan', amount: 1200 },
-  { name: 'Feb', amount: 900 },
-  { name: 'Mar', amount: 1500 },
-  { name: 'Apr', amount: 1100 },
-  { name: 'May', amount: 1800 },
-  { name: 'Jun', amount: 1400 },
-];
+interface SpendingData {
+  category: string;
+  amount: number;
+}
+
+interface SpendingChartProps {
+  data: SpendingData[];
+}
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -24,7 +22,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function SpendingChart() {
+export function SpendingChart({ data }: SpendingChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -34,28 +32,19 @@ export function SpendingChart() {
       <CardContent>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} />
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="category" 
+                tickFormatter={(value: string) => value}
+              />
               <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tickFormatter={(value) => `$${value}`} 
-                width={70}
+                tickFormatter={(value: number) => `$${value}`}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(14, 165, 233, 0.1)' }} />
-              <Bar 
-                dataKey="amount" 
-                fill="url(#colorGradient)" 
-                radius={[4, 4, 0, 0]} 
-                barSize={40} 
+              <Tooltip 
+                formatter={(value: number) => [`$${value}`, 'Amount']}
               />
-              <defs>
-                <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0EA5E9" />
-                  <stop offset="100%" stopColor="#38BDF8" />
-                </linearGradient>
-              </defs>
+              <Bar dataKey="amount" fill="#8884d8" />
             </BarChart>
           </ResponsiveContainer>
         </div>

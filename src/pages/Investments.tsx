@@ -1,12 +1,12 @@
-
 import { MainNavigation } from "@/components/MainNavigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { ArrowUpRight, ArrowDownRight, TrendingUp, PlusCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 // Sample investment data
 const investmentData = [
@@ -73,177 +73,236 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+interface InvestmentData {
+  date: string;
+  value: number;
+}
+
+interface InvestmentChartProps {
+  data: InvestmentData[];
+}
+
+function InvestmentChart({ data }: InvestmentChartProps) {
+  return (
+    <div className="h-[300px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis 
+            dataKey="date" 
+            tickFormatter={(value: string) => value}
+          />
+          <YAxis 
+            tickFormatter={(value: number) => `$${value.toLocaleString()}`}
+          />
+          <Tooltip 
+            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Value']}
+          />
+          <Line type="monotone" dataKey="value" stroke="#8884d8" />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+interface Investment {
+  id: string;
+  name: string;
+  type: string;
+  amount: number;
+  return: number;
+  status: 'active' | 'pending' | 'sold';
+}
+
 const Investments = () => {
+  const [investmentData] = useState<InvestmentData[]>([
+    { date: '2023-01', value: 10000 },
+    { date: '2023-02', value: 12000 },
+    { date: '2023-03', value: 11500 },
+    { date: '2023-04', value: 13000 },
+    { date: '2023-05', value: 12500 },
+    { date: '2023-06', value: 14000 },
+  ]);
+
+  const [investments] = useState<Investment[]>([
+    {
+      id: '1',
+      name: 'Tech Stock ETF',
+      type: 'Stocks',
+      amount: 5000,
+      return: 12.5,
+      status: 'active'
+    },
+    {
+      id: '2',
+      name: 'Real Estate Fund',
+      type: 'Real Estate',
+      amount: 8000,
+      return: 8.2,
+      status: 'active'
+    },
+    {
+      id: '3',
+      name: 'Bond Portfolio',
+      type: 'Bonds',
+      amount: 3000,
+      return: 4.1,
+      status: 'pending'
+    }
+  ]);
+
+  const getStatusColor = (status: Investment['status']) => {
+    switch (status) {
+      case 'active':
+        return 'text-green-500';
+      case 'pending':
+        return 'text-yellow-500';
+      case 'sold':
+        return 'text-red-500';
+      default:
+        return 'text-gray-500';
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <MainNavigation />
-      
-      <main className="flex-1 px-4 sm:px-6 py-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-8 flex items-center justify-between">
+      <main className="flex-1 p-6">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Investments</h1>
-            
-            <div className="flex gap-2">
-              <Button variant="outline" className="gap-1">
-                <RefreshCw className="h-4 w-4" />
-                Refresh
-              </Button>
-              <Button className="finance-gradient hover:opacity-90 gap-1">
-                <PlusCircle className="h-4 w-4" />
-                Add Investment
-              </Button>
-            </div>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Investment
+            </Button>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="finance-card p-6">
-              <h3 className="text-sm font-medium text-muted-foreground">Total Portfolio</h3>
-              <p className="text-2xl font-bold mt-1">$13,800.00</p>
-              <div className="flex items-center text-sm text-green-600 mt-1">
-                <ArrowUpRight className="h-4 w-4 mr-1" />
-                <span>+$300 (2.2%) this month</span>
-              </div>
-            </div>
-            <div className="finance-card p-6">
-              <h3 className="text-sm font-medium text-muted-foreground">Year-to-Date Return</h3>
-              <p className="text-2xl font-bold mt-1">+$800.00</p>
-              <div className="flex items-center text-sm text-green-600 mt-1">
-                <ArrowUpRight className="h-4 w-4 mr-1" />
-                <span>+6.2% YTD</span>
-              </div>
-            </div>
-            <div className="finance-card p-6">
-              <h3 className="text-sm font-medium text-muted-foreground">All-Time Return</h3>
-              <p className="text-2xl font-bold mt-1">+$3,800.00</p>
-              <div className="flex items-center text-sm text-green-600 mt-1">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                <span>+38% since inception</span>
-              </div>
-            </div>
-          </div>
-          
-          <Tabs defaultValue="overview" className="mb-8">
+
+          <Tabs defaultValue="overview" className="space-y-4">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="allocation">Allocation</TabsTrigger>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
             </TabsList>
-            <TabsContent value="overview" className="mt-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Portfolio Performance</CardTitle>
-                      <CardDescription>Historical performance of your investments</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={investmentData}>
-                            <defs>
-                              <linearGradient id="investmentGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.8} />
-                                <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                            <XAxis 
-                              dataKey="date" 
-                              axisLine={false} 
-                              tickLine={false} 
-                              tickFormatter={(value) => {
-                                const date = new Date(value);
-                                return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                              }}
-                            />
-                            <YAxis 
-                              axisLine={false} 
-                              tickLine={false} 
-                              tickFormatter={(value) => `$${value/1000}k`} 
-                              width={60}
-                            />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Area 
-                              type="monotone" 
-                              dataKey="value" 
-                              stroke="#0EA5E9" 
-                              strokeWidth={2} 
-                              fillOpacity={1} 
-                              fill="url(#investmentGradient)" 
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                <div>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Portfolio Allocation</CardTitle>
-                      <CardDescription>Your current investment mix</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        {investmentPortfolio.map((investment) => (
-                          <div key={investment.name}>
-                            <div className="mb-2 flex items-center justify-between">
-                              <div>
-                                <p className="font-medium">{investment.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {investment.allocation}% of portfolio
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-medium">${investment.value.toLocaleString()}</p>
-                                <div
-                                  className={cn(
-                                    "flex items-center text-xs",
-                                    investment.change >= 0
-                                      ? "text-green-600"
-                                      : "text-red-600"
-                                  )}
-                                >
-                                  {investment.change >= 0 ? (
-                                    <ArrowUpRight className="h-3 w-3 mr-1" />
-                                  ) : (
-                                    <ArrowDownRight className="h-3 w-3 mr-1" />
-                                  )}
-                                  <span>
-                                    {investment.change >= 0 ? "+" : ""}
-                                    {investment.change}%
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <Progress value={investment.allocation} className={investment.color} />
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Value</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">$14,000</div>
+                    <p className="text-xs text-green-500">+12.5% from last month</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Active Investments</CardTitle>
+                    <ArrowUpRight className="h-4 w-4 text-blue-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">2</div>
+                    <p className="text-xs text-blue-500">+1 new this month</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                    <ArrowDownRight className="h-4 w-4 text-yellow-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">1</div>
+                    <p className="text-xs text-yellow-500">Processing</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Return</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">+8.2%</div>
+                    <p className="text-xs text-green-500">+2.1% from last month</p>
+                  </CardContent>
+                </Card>
               </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Investment Performance</CardTitle>
+                  <CardDescription>Your investment portfolio value over time</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <InvestmentChart data={investmentData} />
+                </CardContent>
+              </Card>
             </TabsContent>
-            <TabsContent value="allocation">
-              <div className="flex items-center justify-center h-[400px]">
-                <div className="text-center">
-                  <h3 className="text-lg font-medium mb-2">Detailed Allocation Coming Soon</h3>
-                  <p className="text-muted-foreground">
-                    This feature is currently under development
-                  </p>
-                </div>
-              </div>
+
+            <TabsContent value="portfolio" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Portfolio</CardTitle>
+                  <CardDescription>List of your current investments</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {investments.map((investment) => (
+                      <div
+                        key={investment.id}
+                        className="flex items-center justify-between rounded-lg border p-4"
+                      >
+                        <div>
+                          <h3 className="font-medium">{investment.name}</h3>
+                          <p className="text-sm text-muted-foreground">{investment.type}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">${investment.amount.toLocaleString()}</p>
+                          <p className={cn("text-sm", getStatusColor(investment.status))}>
+                            {investment.status.charAt(0).toUpperCase() + investment.status.slice(1)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
-            <TabsContent value="performance">
-              <div className="flex items-center justify-center h-[400px]">
-                <div className="text-center">
-                  <h3 className="text-lg font-medium mb-2">Performance Analytics Coming Soon</h3>
-                  <p className="text-muted-foreground">
-                    This feature is currently under development
-                  </p>
-                </div>
-              </div>
+
+            <TabsContent value="transactions" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Transactions</CardTitle>
+                  <CardDescription>Your investment transactions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                      <div>
+                        <h3 className="font-medium">Bought Tech Stock ETF</h3>
+                        <p className="text-sm text-muted-foreground">June 15, 2023</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">-$5,000</p>
+                        <p className="text-sm text-green-500">Completed</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                      <div>
+                        <h3 className="font-medium">Sold Real Estate Fund</h3>
+                        <p className="text-sm text-muted-foreground">June 10, 2023</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">+$8,000</p>
+                        <p className="text-sm text-green-500">Completed</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
