@@ -65,9 +65,6 @@ const Login = () => {
           return;
         }
 
-        // Store the session
-        localStorage.setItem('token', data.session?.access_token || '');
-        
         toast.success('Successfully logged in!');
         
         // Get the redirect path from location state or default to dashboard
@@ -78,7 +75,7 @@ const Login = () => {
         toast.error('Login failed - no user data received');
       }
     } catch (error: any) {
-      console.error('Unexpected error during login:', error);
+      console.error('Login error:', error);
       if (error.message.includes('Invalid login credentials')) {
         toast.error('Invalid email or password');
       } else if (error.message.includes('Email not confirmed')) {

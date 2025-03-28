@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -22,9 +24,29 @@ const queryClient = new QueryClient();
 // Protected Route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const token = localStorage.getItem('token');
-  const isAuthenticated = token !== null;
-  
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Show nothing while checking authentication
+  if (isAuthenticated === null) {
+    return null;
+  }
+
   if (!isAuthenticated) {
     // Save the attempted path for redirect after login
     localStorage.setItem('redirectPath', location.pathname);
