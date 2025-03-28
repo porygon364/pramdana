@@ -26,9 +26,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
+          vendor: ['react', 'react-dom', 'react-router-dom', '@supabase/supabase-js'],
         },
       },
     },
   },
+  optimizeDeps: {
+    include: ['@supabase/supabase-js']
+  }
 });
