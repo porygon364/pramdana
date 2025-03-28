@@ -154,9 +154,7 @@ const SidebarProvider = React.forwardRef<
 )
 SidebarProvider.displayName = "SidebarProvider"
 
-interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
-  ref?: React.Ref<HTMLDivElement>
-}
+interface SidebarProps extends React.ComponentPropsWithRef<"div"> {}
 
 const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
   ({ className, ...props }, ref) => {
@@ -171,9 +169,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
 )
 Sidebar.displayName = "Sidebar"
 
-interface SidebarHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  ref?: React.Ref<HTMLDivElement>
-}
+interface SidebarHeaderProps extends React.ComponentPropsWithRef<"div"> {}
 
 const SidebarHeader = React.forwardRef<HTMLDivElement, SidebarHeaderProps>(
   ({ className, ...props }, ref) => {
@@ -188,9 +184,7 @@ const SidebarHeader = React.forwardRef<HTMLDivElement, SidebarHeaderProps>(
 )
 SidebarHeader.displayName = "SidebarHeader"
 
-interface SidebarContentProps extends React.HTMLAttributes<HTMLDivElement> {
-  ref?: React.Ref<HTMLDivElement>
-}
+interface SidebarContentProps extends React.ComponentPropsWithRef<"div"> {}
 
 const SidebarContent = React.forwardRef<HTMLDivElement, SidebarContentProps>(
   ({ className, ...props }, ref) => {
@@ -205,9 +199,7 @@ const SidebarContent = React.forwardRef<HTMLDivElement, SidebarContentProps>(
 )
 SidebarContent.displayName = "SidebarContent"
 
-interface SidebarFooterProps extends React.HTMLAttributes<HTMLDivElement> {
-  ref?: React.Ref<HTMLDivElement>
-}
+interface SidebarFooterProps extends React.ComponentPropsWithRef<"div"> {}
 
 const SidebarFooter = React.forwardRef<HTMLDivElement, SidebarFooterProps>(
   ({ className, ...props }, ref) => {
@@ -222,9 +214,7 @@ const SidebarFooter = React.forwardRef<HTMLDivElement, SidebarFooterProps>(
 )
 SidebarFooter.displayName = "SidebarFooter"
 
-interface SidebarButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  ref?: React.Ref<HTMLButtonElement>
-}
+interface SidebarButtonProps extends React.ComponentPropsWithRef<"button"> {}
 
 const SidebarButton = React.forwardRef<HTMLButtonElement, SidebarButtonProps>(
   ({ className, ...props }, ref) => {
@@ -242,9 +232,7 @@ const SidebarButton = React.forwardRef<HTMLButtonElement, SidebarButtonProps>(
 )
 SidebarButton.displayName = "SidebarButton"
 
-interface SidebarLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
-  ref?: React.Ref<HTMLAnchorElement>
-}
+interface SidebarLinkProps extends React.ComponentPropsWithRef<"a"> {}
 
 const SidebarLink = React.forwardRef<HTMLAnchorElement, SidebarLinkProps>(
   ({ className, ...props }, ref) => {
