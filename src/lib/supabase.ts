@@ -15,37 +15,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    storage: {
-      getItem: (key) => {
-        try {
-          const value = localStorage.getItem(key);
-          console.log(`Getting item from storage: ${key}`);
-          return value;
-        } catch (error) {
-          console.error('Error accessing localStorage:', error)
-          return null
-        }
-      },
-      setItem: (key, value) => {
-        try {
-          console.log(`Setting item in storage: ${key}`);
-          localStorage.setItem(key, value)
-        } catch (error) {
-          console.error('Error setting localStorage:', error)
-        }
-      },
-      removeItem: (key) => {
-        try {
-          console.log(`Removing item from storage: ${key}`);
-          localStorage.removeItem(key)
-        } catch (error) {
-          console.error('Error removing from localStorage:', error)
-        }
-      }
-    }
+    autoRefreshToken: true,
+    detectSessionInUrl: true
   }
 })
 
