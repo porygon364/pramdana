@@ -137,14 +137,14 @@ const Login = () => {
                   required
                 />
               </div>
-              <Button 
+              <button 
                 type="submit" 
-                className="w-full finance-gradient"
+                className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
                 onClick={() => console.log('Button clicked')}
               >
                 {loading ? 'Signing in...' : 'Sign In'}
-              </Button>
+              </button>
               
               <div className="text-center text-sm">
                 Don't have an account?{" "}
