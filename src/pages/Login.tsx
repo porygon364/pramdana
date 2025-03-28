@@ -35,9 +35,19 @@ const Login = () => {
     checkUser();
   }, [navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Form submitted');
+    handleLogin();
+  };
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      toast.error('Please enter both email and password');
+      return;
+    }
+
+    console.log('Starting login process...');
     console.log('Email:', email);
     console.log('Password length:', password.length);
     setLoading(true);
@@ -103,7 +113,7 @@ const Login = () => {
               Enter your email and password to sign in
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -141,7 +151,10 @@ const Login = () => {
                 type="submit" 
                 className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
-                onClick={() => console.log('Button clicked')}
+                onClick={() => {
+                  console.log('Button clicked');
+                  handleLogin();
+                }}
               >
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
