@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { AccountProvider, useAccount } from "@/contexts/AccountContext";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -25,6 +26,7 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { accountType, isLoading: isAccountLoading } = useAccount();
 
   useEffect(() => {
     // Check current session
@@ -43,7 +45,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   // Show nothing while checking authentication
-  if (isAuthenticated === null) {
+  if (isAuthenticated === null || isAccountLoading) {
     return null;
   }
 
@@ -52,8 +54,52 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem('redirectPath', location.pathname);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
+  // If authenticated but no account type selected, redirect to account type selection
+  if (!accountType && location.pathname !== '/account-type') {
+    return <Navigate to="/account-type" replace />;
+  }
   
   return <>{children}</>;
+};
+
+const AppRoutes = () => {
+  const { accountType } = useAccount();
+
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      
+      {/* Protected Routes */}
+      <Route path="/account-type" element={
+        <ProtectedRoute>
+          <AccountType />
+        </ProtectedRoute>
+      } />
+      
+      {/* Dashboard Routes */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <DashboardLayout />
+        </ProtectedRoute>
+      }>
+        <Route index element={<Navigate to="/dashboard/wallets" replace />} />
+        <Route path="wallets" element={<Wallets />} />
+        <Route path="transactions" element={<Transactions />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="profile" element={<Profile />} />
+      </Route>
+
+      {/* Catch all route */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
 };
 
 const App = () => {
@@ -63,38 +109,9 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            
-            {/* Protected Routes */}
-            <Route path="/account-type" element={
-              <ProtectedRoute>
-                <AccountType />
-              </ProtectedRoute>
-            } />
-            
-            {/* Dashboard Routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <DashboardLayout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Navigate to="/dashboard/wallets" replace />} />
-              <Route path="wallets" element={<Wallets />} />
-              <Route path="transactions" element={<Transactions />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="profile" element={<Profile />} />
-            </Route>
-
-            {/* Catch all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AccountProvider>
+            <AppRoutes />
+          </AccountProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
