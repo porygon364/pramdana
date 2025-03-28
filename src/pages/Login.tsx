@@ -14,11 +14,22 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Login component mounted');
     // Check if user is already logged in
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/dashboard');
+      try {
+        console.log('Checking existing session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Session check error:', error);
+          return;
+        }
+        if (session) {
+          console.log('Existing session found:', session);
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
       }
     };
     checkUser();
@@ -26,34 +37,46 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted');
+    console.log('Email:', email);
+    console.log('Password length:', password.length);
     setLoading(true);
 
     try {
-      console.log('Attempting login with:', { email }); // Log login attempt
+      console.log('Attempting login with:', { email });
+      console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+      console.log('Supabase client:', !!supabase);
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('Login response:', { data, error });
+
       if (error) {
-        console.error('Login error:', error); // Log detailed error
+        console.error('Login error:', error);
         throw error;
       }
 
       if (data?.user) {
+        console.log('Login successful, user data:', data.user);
         // Check if email is confirmed
         if (!data.user.email_confirmed_at) {
+          console.log('Email not confirmed');
           toast.error('Please confirm your email before logging in');
           return;
         }
 
-        console.log('Login successful:', data.user); // Log successful login
+        console.log('Email confirmed, proceeding to dashboard');
         toast.success('Successfully logged in!');
         navigate('/dashboard');
+      } else {
+        console.log('No user data returned');
+        toast.error('Login failed - no user data returned');
       }
     } catch (error: any) {
-      console.error('Login error details:', error); // Log detailed error
+      console.error('Login error details:', error);
       if (error.message.includes('Invalid login credentials')) {
         toast.error('Invalid email or password');
       } else if (error.message.includes('Email not confirmed')) {
@@ -89,7 +112,10 @@ const Login = () => {
                   type="email" 
                   placeholder="name@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    console.log('Email changed:', e.target.value);
+                    setEmail(e.target.value);
+                  }}
                   required
                 />
               </div>
@@ -104,7 +130,10 @@ const Login = () => {
                   id="password" 
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    console.log('Password changed, length:', e.target.value.length);
+                    setPassword(e.target.value);
+                  }}
                   required
                 />
               </div>
@@ -112,6 +141,7 @@ const Login = () => {
                 type="submit" 
                 className="w-full finance-gradient"
                 disabled={loading}
+                onClick={() => console.log('Button clicked')}
               >
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
