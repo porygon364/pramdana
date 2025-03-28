@@ -6,10 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Index from "./pages/Index";
-import Expenses from "./pages/Expenses";
-import Savings from "./pages/Savings";
-import Goals from "./pages/Goals";
+import AccountType from "./pages/AccountType";
+import DashboardLayout from "./components/layouts/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import AuthCallback from "./pages/AuthCallback";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -30,10 +28,16 @@ const App = () => (
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/dashboard" element={<Index />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path="/savings" element={<Savings />} />
-          <Route path="/goals" element={<Goals />} />
+          <Route path="/account-type" element={<AccountType />} />
+          
+          {/* Dashboard Routes */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route path="wallets" element={<div>Wallets Page</div>} />
+            <Route path="transactions" element={<div>Transactions Page</div>} />
+            <Route path="analytics" element={<div>Analytics & AI Page</div>} />
+            <Route path="profile" element={<div>Profile Page</div>} />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
