@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
@@ -13,87 +12,43 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log('Login component mounted');
-    // Check if user is already logged in
-    const checkUser = async () => {
-      try {
-        console.log('Checking existing session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('Session check error:', error);
-          return;
-        }
-        if (session) {
-          console.log('Existing session found:', session);
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        console.error('Error checking session:', error);
-      }
-    };
-    checkUser();
-  }, [navigate]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Form submitted');
-    handleLogin();
-  };
-
   const handleLogin = async () => {
-    if (!email || !password) {
-      toast.error('Please enter both email and password');
-      return;
-    }
-
-    console.log('Starting login process...');
-    console.log('Email:', email);
-    console.log('Password length:', password.length);
-    setLoading(true);
-
     try {
-      console.log('Attempting login with:', { email });
-      console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-      console.log('Supabase client:', !!supabase);
+      // Basic validation
+      if (!email || !password) {
+        alert('Please enter both email and password');
+        return;
+      }
 
+      // Log the attempt
+      console.log('Login attempt with:', { email });
+      
+      // Set loading state
+      setLoading(true);
+
+      // Attempt login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      // Log the response
       console.log('Login response:', { data, error });
 
       if (error) {
-        console.error('Login error:', error);
-        throw error;
+        alert(error.message);
+        return;
       }
 
       if (data?.user) {
-        console.log('Login successful, user data:', data.user);
-        // Check if email is confirmed
-        if (!data.user.email_confirmed_at) {
-          console.log('Email not confirmed');
-          toast.error('Please confirm your email before logging in');
-          return;
-        }
-
-        console.log('Email confirmed, proceeding to dashboard');
-        toast.success('Successfully logged in!');
+        alert('Login successful!');
         navigate('/dashboard');
       } else {
-        console.log('No user data returned');
-        toast.error('Login failed - no user data returned');
+        alert('Login failed - no user data returned');
       }
     } catch (error: any) {
-      console.error('Login error details:', error);
-      if (error.message.includes('Invalid login credentials')) {
-        toast.error('Invalid email or password');
-      } else if (error.message.includes('Email not confirmed')) {
-        toast.error('Please confirm your email before logging in');
-      } else {
-        toast.error(error.message || 'Failed to login');
-      }
+      console.error('Login error:', error);
+      alert(error.message || 'Failed to login');
     } finally {
       setLoading(false);
     }
@@ -113,60 +68,48 @@ const Login = () => {
               Enter your email and password to sign in
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => {
-                    console.log('Email changed:', e.target.value);
-                    setEmail(e.target.value);
-                  }}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-                    Forgot your password?
-                  </Link>
-                </div>
-                <Input 
-                  id="password" 
-                  type="password"
-                  value={password}
-                  onChange={(e) => {
-                    console.log('Password changed, length:', e.target.value.length);
-                    setPassword(e.target.value);
-                  }}
-                  required
-                />
-              </div>
-              <button 
-                type="submit" 
-                className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={loading}
-                onClick={() => {
-                  console.log('Button clicked');
-                  handleLogin();
-                }}
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
-              
-              <div className="text-center text-sm">
-                Don't have an account?{" "}
-                <Link to="/register" className="text-primary hover:underline">
-                  Sign up
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                  Forgot your password?
                 </Link>
               </div>
-            </CardContent>
-          </form>
+              <Input 
+                id="password" 
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button 
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+            
+            <div className="text-center text-sm">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-primary hover:underline">
+                Sign up
+              </Link>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>
