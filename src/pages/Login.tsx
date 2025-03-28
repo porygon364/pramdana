@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -11,23 +11,25 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   console.log('Login component rendered');
 
   useEffect(() => {
-    // Check if user is already logged in
     const checkUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          navigate('/dashboard');
+          // Get the redirect path from location state or default to dashboard
+          const from = (location.state as any)?.from?.pathname || '/dashboard';
+          navigate(from, { replace: true });
         }
       } catch (error) {
         console.error('Session check error:', error);
       }
     };
     checkUser();
-  }, [navigate]);
+  }, [navigate, location]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,8 +65,14 @@ const Login = () => {
           return;
         }
 
+        // Store the session
+        localStorage.setItem('token', data.session?.access_token || '');
+        
         toast.success('Successfully logged in!');
-        navigate('/dashboard');
+        
+        // Get the redirect path from location state or default to dashboard
+        const from = (location.state as any)?.from?.pathname || '/dashboard';
+        navigate(from, { replace: true });
       } else {
         console.log('No user data in response');
         toast.error('Login failed - no user data received');

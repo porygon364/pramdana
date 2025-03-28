@@ -22,13 +22,8 @@ const queryClient = new QueryClient();
 // Protected Route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const isAuthenticated = localStorage.getItem('token') !== null;
-  
-  console.log('Protected Route Check:', {
-    isAuthenticated,
-    currentPath: location.pathname,
-    token: localStorage.getItem('token')
-  });
+  const token = localStorage.getItem('token');
+  const isAuthenticated = token !== null;
   
   if (!isAuthenticated) {
     // Save the attempted path for redirect after login
