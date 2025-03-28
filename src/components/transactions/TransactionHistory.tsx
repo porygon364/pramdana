@@ -33,6 +33,13 @@ interface Transaction {
   created_at: string;
 }
 
+interface Wallet {
+  id: string;
+  name: string;
+  balance: number;
+  is_active: boolean;
+}
+
 const TransactionHistory = () => {
   const { toast } = useToast();
   const { accountType } = useAccount();
@@ -42,20 +49,71 @@ const TransactionHistory = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [selectedWallet, setSelectedWallet] = useState<string>('');
 
   useEffect(() => {
-    loadTransactions();
-    
-    // Listen for transaction added event
-    const handleTransactionAdded = () => {
-      loadTransactions();
-    };
-    window.addEventListener('transactionAdded', handleTransactionAdded);
-    
-    return () => {
-      window.removeEventListener('transactionAdded', handleTransactionAdded);
-    };
+    loadWallets();
   }, [accountType]);
+
+  useEffect(() => {
+    if (selectedWallet) {
+      loadTransactions();
+    }
+  }, [selectedWallet]);
+
+  const loadWallets = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error('No user found');
+
+      // Get all wallets for the user and account type
+      const { data: allWallets, error: walletsError } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('type', accountType);
+
+      if (walletsError) throw walletsError;
+
+      // Get the active wallet
+      const { data: activeWallet, error: activeError } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('type', accountType)
+        .eq('is_active', true)
+        .single();
+
+      if (activeError && activeError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        throw activeError;
+      }
+
+      // Set all wallets for the dropdown
+      setWallets(allWallets || []);
+      
+      // Set the active wallet as selected
+      if (activeWallet) {
+        setSelectedWallet(activeWallet.id);
+      } else if (allWallets && allWallets.length > 0) {
+        // If no active wallet, set the first one as active
+        const firstWallet = allWallets[0];
+        await supabase
+          .from('wallets')
+          .update({ is_active: true })
+          .eq('id', firstWallet.id);
+        setSelectedWallet(firstWallet.id);
+      }
+    } catch (error) {
+      console.error('Error loading wallets:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load wallets. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const loadTransactions = async () => {
     try {
@@ -68,6 +126,7 @@ const TransactionHistory = () => {
         .from('transactions')
         .select('*')
         .eq('user_id', user.id)
+        .eq('wallet_id', selectedWallet)
         .eq('account_type', accountType)
         .order('transaction_date', { ascending: false });
 
@@ -114,6 +173,31 @@ const TransactionHistory = () => {
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
   };
 
+  const getTransactionIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'food & dining':
+        return '🍽️';
+      case 'transportation':
+        return '🚗';
+      case 'shopping':
+        return '🛍️';
+      case 'bills & utilities':
+        return '📄';
+      case 'entertainment':
+        return '🎮';
+      case 'health & medical':
+        return '🏥';
+      case 'education':
+        return '📚';
+      case 'travel':
+        return '✈️';
+      case 'gifts & donations':
+        return '🎁';
+      default:
+        return '💰';
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -123,7 +207,22 @@ const TransactionHistory = () => {
   }
 
   return (
-    <Card className="p-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Transaction History</h2>
+        <div className="flex items-center space-x-2">
+          {wallets.map((wallet) => (
+            <Button
+              key={wallet.id}
+              variant={selectedWallet === wallet.id ? "default" : "outline"}
+              onClick={() => setSelectedWallet(wallet.id)}
+            >
+              {wallet.name} (${wallet.balance.toFixed(2)})
+            </Button>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
@@ -199,7 +298,7 @@ const TransactionHistory = () => {
           </Table>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

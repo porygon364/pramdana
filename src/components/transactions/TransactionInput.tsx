@@ -66,7 +66,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       
       if (!user) throw new Error('No user found');
 
-      // First, get all wallets for the user and account type
+      // Get all wallets for the user and account type
       const { data: allWallets, error: walletsError } = await supabase
         .from('wallets')
         .select('*')
@@ -75,7 +75,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
 
       if (walletsError) throw walletsError;
 
-      // Then, get the active wallet
+      // Get the active wallet
       const { data: activeWallet, error: activeError } = await supabase
         .from('wallets')
         .select('*')
