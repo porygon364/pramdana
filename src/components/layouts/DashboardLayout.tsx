@@ -15,10 +15,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { TransactionForm } from '../transactions/TransactionForm';
+import { VoiceRecorder } from '../transactions/VoiceRecorder';
+import { useToast } from "@/components/ui/use-toast";
 
 const DashboardLayout = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [activeSheet, setActiveSheet] = React.useState<'manual' | 'voice' | null>(null);
+  const { toast } = useToast();
 
   const tabs = [
     { value: "wallets", label: "Wallets", icon: Wallet, path: "/dashboard/wallets" },
@@ -28,6 +33,26 @@ const DashboardLayout = () => {
   ];
 
   const currentTab = tabs.find(tab => location.pathname.startsWith(tab.path))?.value || "wallets";
+
+  const handleTransactionSubmit = (data: any) => {
+    // Here you would typically send the data to your backend
+    console.log('Transaction submitted:', data);
+    toast({
+      title: "Success",
+      description: "Transaction recorded successfully!",
+    });
+    setActiveSheet(null);
+  };
+
+  const handleVoiceTranscription = (text: string) => {
+    // Here you would typically parse the transcription and create a transaction
+    console.log('Voice transcription:', text);
+    toast({
+      title: "Success",
+      description: "Voice input processed successfully!",
+    });
+    setActiveSheet(null);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -91,7 +116,7 @@ const DashboardLayout = () => {
 
           {/* Floating Action Button */}
           <div className="fixed bottom-6 right-6 flex flex-col gap-2">
-            <Sheet>
+            <Sheet open={activeSheet !== null} onOpenChange={(open) => !open && setActiveSheet(null)}>
               <SheetTrigger asChild>
                 <Button size="icon" className="h-12 w-12 rounded-full shadow-lg">
                   <Plus className="h-6 w-6" />
@@ -102,17 +127,36 @@ const DashboardLayout = () => {
                   <SheetTitle>Add Transaction</SheetTitle>
                 </SheetHeader>
                 <div className="mt-4">
-                  {/* Manual Input Form */}
-                  <div className="space-y-4">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Receipt className="mr-2 h-4 w-4" />
-                      Manual Input
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Mic className="mr-2 h-4 w-4" />
-                      Voice Record
-                    </Button>
-                  </div>
+                  {activeSheet === 'manual' ? (
+                    <TransactionForm
+                      onSubmit={handleTransactionSubmit}
+                      onCancel={() => setActiveSheet(null)}
+                    />
+                  ) : activeSheet === 'voice' ? (
+                    <VoiceRecorder
+                      onTranscriptionComplete={handleVoiceTranscription}
+                      onCancel={() => setActiveSheet(null)}
+                    />
+                  ) : (
+                    <div className="space-y-4">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => setActiveSheet('manual')}
+                      >
+                        <Receipt className="mr-2 h-4 w-4" />
+                        Manual Input
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => setActiveSheet('voice')}
+                      >
+                        <Mic className="mr-2 h-4 w-4" />
+                        Voice Record
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>
