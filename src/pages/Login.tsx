@@ -54,6 +54,12 @@ const Login = () => {
     }
   };
 
+  // Test function to verify click handling
+  const testClick = () => {
+    console.log('Test button clicked!');
+    alert('Test button clicked!');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-50 to-white dark:from-purple-950/20 dark:to-background p-4">
       <div className="w-full max-w-md">
@@ -95,10 +101,37 @@ const Login = () => {
                 required
               />
             </div>
+            
+            {/* Test button */}
+            <button 
+              onClick={testClick}
+              style={{
+                width: '100%',
+                padding: '8px 16px',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginBottom: '10px'
+              }}
+            >
+              Test Button
+            </button>
+
+            {/* Login button */}
             <button 
               onClick={handleLogin}
-              disabled={loading}
-              className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                width: '100%',
+                padding: '8px 16px',
+                backgroundColor: '#9333EA',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.5 : 1
+              }}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
