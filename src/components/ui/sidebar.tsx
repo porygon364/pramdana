@@ -635,8 +635,8 @@ const SidebarMenuSubItem = React.forwardRef<
 SidebarMenuSubItem.displayName = "SidebarMenuSubItem"
 
 const SidebarMenuSubButton = React.forwardRef<
-  React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot> & {
+  HTMLAnchorElement,
+  React.ComponentPropsWithoutRef<"a"> & {
     asChild?: boolean
     size?: "sm" | "md"
     isActive?: boolean
