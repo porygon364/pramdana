@@ -81,7 +81,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       console.error('Error adding transaction:', error);
       toast({
         title: "Error",
-        description: "Failed to add transaction. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to add transaction. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -104,20 +104,37 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       const reader = new FileReader();
       
       reader.onload = async (e) => {
-        const base64String = e.target?.result as string;
-        const base64Data = base64String.split(',')[1];
-        
-        const result = await analyzeReceipt(base64Data);
-        
-        // Pre-fill the form with extracted data
-        setAmount(result.amount.toString());
-        setPlace(result.place);
-        setDate(new Date(result.date));
-        setDescription(`Items: ${result.items.join(', ')}`);
-        
+        try {
+          const base64String = e.target?.result as string;
+          const base64Data = base64String.split(',')[1];
+          
+          const result = await analyzeReceipt(base64Data);
+          
+          // Pre-fill the form with extracted data
+          setAmount(result.amount.toString());
+          setPlace(result.place);
+          setDate(new Date(result.date));
+          setDescription(`Items: ${result.items.join(', ')}`);
+          
+          toast({
+            title: "Success",
+            description: "Receipt processed successfully!",
+          });
+        } catch (error) {
+          console.error('Error processing receipt:', error);
+          toast({
+            title: "Error",
+            description: error instanceof Error ? error.message : "Failed to process receipt. Please try again.",
+            variant: "destructive",
+          });
+        }
+      };
+
+      reader.onerror = () => {
         toast({
-          title: "Success",
-          description: "Receipt processed successfully!",
+          title: "Error",
+          description: "Failed to read the receipt file. Please try again.",
+          variant: "destructive",
         });
       };
 
@@ -126,7 +143,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       console.error('Error processing receipt:', error);
       toast({
         title: "Error",
-        description: "Failed to process receipt. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to process receipt. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -146,9 +163,9 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         try {
           setProcessing(true);
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
           const transcribedText = await transcribeAudio(audioBlob);
           const result = await extractTransactionDetails(transcribedText);
           
@@ -167,7 +184,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
           console.error('Error processing voice input:', error);
           toast({
             title: "Error",
-            description: "Failed to process voice input. Please try again.",
+            description: error instanceof Error ? error.message : "Failed to process voice input. Please try again.",
             variant: "destructive",
           });
         } finally {
@@ -181,7 +198,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       console.error('Error accessing microphone:', error);
       toast({
         title: "Error",
-        description: "Failed to access microphone. Please check permissions.",
+        description: error instanceof Error ? error.message : "Failed to access microphone. Please check permissions.",
         variant: "destructive",
       });
     }
