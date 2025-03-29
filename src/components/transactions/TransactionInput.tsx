@@ -66,16 +66,36 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       
       if (!user) throw new Error('No user found');
 
-      // Get all wallets for the user and account type
-      const { data: allWallets, error: walletsError } = await supabase
+      // First, check if any wallets exist for this account type
+      const { data: existingWallets, error: checkError } = await supabase
         .from('wallets')
         .select('*')
         .eq('user_id', user.id)
         .eq('type', accountType);
 
-      if (walletsError) throw walletsError;
+      if (checkError) throw checkError;
 
-      // Get the active wallet
+      // If no wallets exist, create a default wallet
+      if (!existingWallets || existingWallets.length === 0) {
+        const { data: newWallet, error: createError } = await supabase
+          .from('wallets')
+          .insert({
+            user_id: user.id,
+            name: `${accountType.charAt(0).toUpperCase() + accountType.slice(1)} Wallet`,
+            balance: 0,
+            type: accountType,
+            is_active: true
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        setWallets([newWallet]);
+        setSelectedWallet(newWallet.id);
+        return;
+      }
+
+      // If wallets exist, get the active one
       const { data: activeWallet, error: activeError } = await supabase
         .from('wallets')
         .select('*')
@@ -89,14 +109,14 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       }
 
       // Set all wallets for the dropdown
-      setWallets(allWallets || []);
+      setWallets(existingWallets);
       
       // Set the active wallet as selected
       if (activeWallet) {
         setSelectedWallet(activeWallet.id);
-      } else if (allWallets && allWallets.length > 0) {
+      } else {
         // If no active wallet, set the first one as active
-        const firstWallet = allWallets[0];
+        const firstWallet = existingWallets[0];
         await supabase
           .from('wallets')
           .update({ is_active: true })
