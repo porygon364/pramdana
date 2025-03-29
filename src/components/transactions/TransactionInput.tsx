@@ -227,7 +227,14 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
   };
 
   const processReceipt = async () => {
-    if (!receiptFile) return;
+    if (!receiptFile) {
+      toast({
+        title: "Error",
+        description: "Please select a receipt image first.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       setProcessing(true);
@@ -238,7 +245,9 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
           const base64String = e.target?.result as string;
           const base64Data = base64String.split(',')[1];
           
+          console.log('Processing receipt image...');
           const result = await analyzeReceipt(base64Data);
+          console.log('Receipt analysis result:', result);
           
           // Pre-fill the form with extracted data
           setAmount(result.amount.toString());
@@ -250,7 +259,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
           
           toast({
             title: "Success",
-            description: "Receipt processed successfully!",
+            description: "Receipt processed successfully! Please review and submit.",
           });
         } catch (error) {
           console.error('Error processing receipt:', error);
@@ -298,8 +307,11 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
         try {
           setProcessing(true);
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+          console.log('Processing audio recording...');
           const transcribedText = await transcribeAudio(audioBlob);
+          console.log('Transcribed text:', transcribedText);
           const result = await extractTransactionDetails(transcribedText);
+          console.log('Transaction details:', result);
           
           // Pre-fill the form with extracted data
           setAmount(result.amount.toString());
@@ -312,7 +324,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
           
           toast({
             title: "Success",
-            description: "Voice input processed successfully!",
+            description: "Voice input processed successfully! Please review and submit.",
           });
         } catch (error) {
           console.error('Error processing voice input:', error);
@@ -328,6 +340,10 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
 
       mediaRecorder.start();
       setIsRecording(true);
+      toast({
+        title: "Recording Started",
+        description: "Click the button again to stop recording.",
+      });
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast({
@@ -344,17 +360,31 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
       setIsRecording(false);
       setHasRecording(true);
+      toast({
+        title: "Recording Stopped",
+        description: "Click 'Analyze Recording' to process your voice input.",
+      });
     }
   };
 
   const analyzeRecording = async () => {
-    if (!hasRecording || audioChunksRef.current.length === 0) return;
+    if (!hasRecording || audioChunksRef.current.length === 0) {
+      toast({
+        title: "Error",
+        description: "No recording available to analyze.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       setProcessing(true);
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+      console.log('Processing audio recording...');
       const transcribedText = await transcribeAudio(audioBlob);
+      console.log('Transcribed text:', transcribedText);
       const result = await extractTransactionDetails(transcribedText);
+      console.log('Transaction details:', result);
       
       // Pre-fill the form with extracted data
       setAmount(result.amount.toString());
@@ -367,7 +397,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       
       toast({
         title: "Success",
-        description: "Voice input processed successfully!",
+        description: "Voice input processed successfully! Please review and submit.",
       });
 
       // Reset recording state
