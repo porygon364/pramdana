@@ -65,6 +65,10 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) throw new Error('No user found');
+      if (!accountType) {
+        console.warn('No account type selected');
+        return;
+      }
 
       // First, check if any wallets exist for this account type
       const { data: existingWallets, error: checkError } = await supabase
