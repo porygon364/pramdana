@@ -77,10 +77,14 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
         .eq('user_id', user.id)
         .eq('type', accountType);
 
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error('Error checking wallets:', checkError);
+        throw checkError;
+      }
 
       // If no wallets exist, create a default wallet
       if (!existingWallets || existingWallets.length === 0) {
+        console.log('Creating default wallet for account type:', accountType);
         const { data: newWallet, error: createError } = await supabase
           .from('wallets')
           .insert({
@@ -93,7 +97,12 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
           .select()
           .single();
 
-        if (createError) throw createError;
+        if (createError) {
+          console.error('Error creating wallet:', createError);
+          throw createError;
+        }
+
+        console.log('Created new wallet:', newWallet);
         setWallets([newWallet]);
         setSelectedWallet(newWallet.id);
         return;
@@ -109,6 +118,7 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
         .single();
 
       if (activeError && activeError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        console.error('Error getting active wallet:', activeError);
         throw activeError;
       }
 
@@ -117,14 +127,22 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
       
       // Set the active wallet as selected
       if (activeWallet) {
+        console.log('Found active wallet:', activeWallet);
         setSelectedWallet(activeWallet.id);
       } else {
         // If no active wallet, set the first one as active
         const firstWallet = existingWallets[0];
-        await supabase
+        console.log('Setting first wallet as active:', firstWallet);
+        const { error: updateError } = await supabase
           .from('wallets')
           .update({ is_active: true })
           .eq('id', firstWallet.id);
+
+        if (updateError) {
+          console.error('Error updating wallet:', updateError);
+          throw updateError;
+        }
+
         setSelectedWallet(firstWallet.id);
       }
     } catch (error) {

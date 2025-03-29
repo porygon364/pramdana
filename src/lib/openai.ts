@@ -80,6 +80,7 @@ export async function transcribeAudio(audioBlob: Blob) {
   }
 
   try {
+    console.log('Starting audio transcription...');
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.wav');
     formData.append('model', 'whisper-1');
@@ -99,6 +100,7 @@ export async function transcribeAudio(audioBlob: Blob) {
     }
 
     const data = await response.json();
+    console.log('Transcription Result:', data);
     return data.text;
   } catch (error) {
     console.error('Error transcribing audio:', error);
@@ -112,6 +114,7 @@ export async function extractTransactionDetails(text: string) {
   }
 
   try {
+    console.log('Starting transaction details extraction...');
     const response = await fetch(`${OPENAI_API_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -141,6 +144,8 @@ export async function extractTransactionDetails(text: string) {
     }
 
     const data = await response.json();
+    console.log('OpenAI API Response:', data);
+    
     const result = data.choices[0].message.content;
     if (!result) throw new Error('No result from OpenAI');
 

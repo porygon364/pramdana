@@ -133,6 +133,10 @@ const TransactionAnalytics = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) throw new Error('No user found');
+      if (!selectedWallet) {
+        console.warn('No wallet selected');
+        return;
+      }
 
       // Get transactions for the last 6 months
       const sixMonthsAgo = subMonths(new Date(), 6);
@@ -145,13 +149,25 @@ const TransactionAnalytics = () => {
         .gte('transaction_date', sixMonthsAgo.toISOString())
         .order('transaction_date', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading transactions:', error);
+        throw error;
+      }
+
+      console.log('Loaded transactions:', transactions);
 
       // Process data for analytics
       const categoryBreakdown = processCategoryBreakdown(transactions || []);
       const monthlySpending = processMonthlySpending(transactions || []);
       const totalSpent = calculateTotalSpent(transactions || []);
       const averageSpent = calculateAverageSpent(transactions || []);
+
+      console.log('Processed analytics:', {
+        categoryBreakdown,
+        monthlySpending,
+        totalSpent,
+        averageSpent
+      });
 
       setAnalyticsData({
         categoryBreakdown,
