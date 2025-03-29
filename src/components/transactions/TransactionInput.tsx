@@ -70,80 +70,45 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
         return;
       }
 
-      // First, check if any wallets exist for this account type
-      const { data: existingWallets, error: checkError } = await supabase
+      const { data: wallets, error } = await supabase
         .from('wallets')
         .select('*')
         .eq('user_id', user.id)
         .eq('type', accountType);
 
-      if (checkError) {
-        console.error('Error checking wallets:', checkError);
-        throw checkError;
-      }
+      if (error) throw error;
 
-      // If no wallets exist, create a default wallet
-      if (!existingWallets || existingWallets.length === 0) {
-        console.log('Creating default wallet for account type:', accountType);
+      if (wallets && wallets.length > 0) {
+        setWallets(wallets);
+        // Set the active wallet as selected
+        const activeWallet = wallets.find(w => w.is_active);
+        if (activeWallet) {
+          setSelectedWallet(activeWallet.id);
+        } else {
+          setSelectedWallet(wallets[0].id);
+        }
+      } else {
+        // Create a default wallet if none exists
         const { data: newWallet, error: createError } = await supabase
           .from('wallets')
-          .insert({
-            user_id: user.id,
-            name: `${accountType.charAt(0).toUpperCase() + accountType.slice(1)} Wallet`,
-            balance: 0,
-            type: accountType,
-            is_active: true
-          })
+          .insert([
+            {
+              user_id: user.id,
+              name: `${accountType} Wallet`,
+              balance: 0,
+              type: accountType,
+              is_active: true
+            }
+          ])
           .select()
           .single();
 
-        if (createError) {
-          console.error('Error creating wallet:', createError);
-          throw createError;
+        if (createError) throw createError;
+
+        if (newWallet) {
+          setWallets([newWallet]);
+          setSelectedWallet(newWallet.id);
         }
-
-        console.log('Created new wallet:', newWallet);
-        setWallets([newWallet]);
-        setSelectedWallet(newWallet.id);
-        return;
-      }
-
-      // If wallets exist, get the active one
-      const { data: activeWallet, error: activeError } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('type', accountType)
-        .eq('is_active', true)
-        .single();
-
-      if (activeError && activeError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-        console.error('Error getting active wallet:', activeError);
-        throw activeError;
-      }
-
-      // Set all wallets for the dropdown
-      setWallets(existingWallets);
-      
-      // Set the active wallet as selected
-      if (activeWallet) {
-        console.log('Found active wallet:', activeWallet);
-        setSelectedWallet(activeWallet.id);
-      } else {
-        // If no active wallet, set the first one as active
-        const firstWallet = existingWallets[0];
-        console.log('Setting first wallet as active:', firstWallet);
-        const { error: updateError } = await supabase
-          .from('wallets')
-          .update({ is_active: true })
-          .eq('id', firstWallet.id);
-
-        if (updateError) {
-          console.error('Error updating wallet:', updateError);
-          throw updateError;
-        }
-
-        setSelectedWallet(firstWallet.id);
       }
     } catch (error) {
       console.error('Error loading wallets:', error);
@@ -415,8 +380,35 @@ const TransactionInput = ({ onSuccess }: TransactionInputProps) => {
     }
   };
 
+  const handleWhatsAppShare = () => {
+    if (!amount || !category || !place) {
+      toast({
+        title: "Error",
+        description: "Please fill in the required fields before sharing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const message = `New Transaction Details:\nAmount: $${amount}\nCategory: ${category}\nPlace: ${place}\nDate: ${date.toLocaleDateString()}\nDescription: ${description}`;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/6287784130824?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <Card className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Add Transaction</h2>
+        <Button
+          onClick={handleWhatsAppShare}
+          className="bg-green-500 hover:bg-green-600"
+          disabled={!amount || !category || !place}
+        >
+          Share on WhatsApp
+        </Button>
+      </div>
+
       <Tabs defaultValue="manual" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="manual">

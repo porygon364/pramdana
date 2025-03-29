@@ -85,6 +85,28 @@ const TransactionAnalytics = () => {
         } else {
           setSelectedWallet(wallets[0].id);
         }
+      } else {
+        // Create a default wallet if none exists
+        const { data: newWallet, error: createError } = await supabase
+          .from('wallets')
+          .insert([
+            {
+              user_id: user.id,
+              name: `${accountType} Wallet`,
+              balance: 0,
+              type: accountType,
+              is_active: true
+            }
+          ])
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
+        if (newWallet) {
+          setWallets([newWallet]);
+          setSelectedWallet(newWallet.id);
+        }
       }
     } catch (error) {
       console.error('Error loading wallets:', error);
@@ -215,7 +237,7 @@ const TransactionAnalytics = () => {
         >
           {wallets.map((wallet) => (
             <option key={wallet.id} value={wallet.id}>
-              {wallet.name}
+              {wallet.name} (${wallet.balance.toFixed(2)})
             </option>
           ))}
         </select>
