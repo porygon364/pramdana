@@ -1,34 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/lib/supabase';
 import { useAccount } from '@/contexts/AccountContext';
 import { Loader2 } from "lucide-react";
-import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
-import { Button } from "@/components/ui/button";
-
-interface Transaction {
-  amount: number;
-  category: string;
-  transaction_date: string;
-}
+import { format, subMonths } from "date-fns";
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 interface Wallet {
   id: string;
   name: string;
   balance: number;
+  type: string;
   is_active: boolean;
 }
 
@@ -79,43 +63,28 @@ const TransactionAnalytics = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) throw new Error('No user found');
+      if (!accountType) {
+        console.warn('No account type selected');
+        return;
+      }
 
-      // Get all wallets for the user and account type
-      const { data: allWallets, error: walletsError } = await supabase
+      const { data: wallets, error } = await supabase
         .from('wallets')
         .select('*')
         .eq('user_id', user.id)
         .eq('type', accountType);
 
-      if (walletsError) throw walletsError;
+      if (error) throw error;
 
-      // Get the active wallet
-      const { data: activeWallet, error: activeError } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('type', accountType)
-        .eq('is_active', true)
-        .single();
-
-      if (activeError && activeError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-        throw activeError;
-      }
-
-      // Set all wallets for the dropdown
-      setWallets(allWallets || []);
-      
-      // Set the active wallet as selected
-      if (activeWallet) {
-        setSelectedWallet(activeWallet.id);
-      } else if (allWallets && allWallets.length > 0) {
-        // If no active wallet, set the first one as active
-        const firstWallet = allWallets[0];
-        await supabase
-          .from('wallets')
-          .update({ is_active: true })
-          .eq('id', firstWallet.id);
-        setSelectedWallet(firstWallet.id);
+      if (wallets && wallets.length > 0) {
+        setWallets(wallets);
+        // Set the active wallet as selected
+        const activeWallet = wallets.find(w => w.is_active);
+        if (activeWallet) {
+          setSelectedWallet(activeWallet.id);
+        } else {
+          setSelectedWallet(wallets[0].id);
+        }
       }
     } catch (error) {
       console.error('Error loading wallets:', error);
@@ -187,7 +156,7 @@ const TransactionAnalytics = () => {
     }
   };
 
-  const processCategoryBreakdown = (transactions: Transaction[]): CategoryBreakdown[] => {
+  const processCategoryBreakdown = (transactions: any[]): CategoryBreakdown[] => {
     const breakdown = transactions.reduce((acc: CategoryBreakdown[], curr) => {
       const existing = acc.find(c => c.category === curr.category);
       if (existing) {
@@ -201,7 +170,7 @@ const TransactionAnalytics = () => {
     return breakdown.sort((a, b) => b.amount - a.amount);
   };
 
-  const processMonthlySpending = (transactions: Transaction[]): MonthlySpending[] => {
+  const processMonthlySpending = (transactions: any[]): MonthlySpending[] => {
     const monthlyData = transactions.reduce((acc: MonthlySpending[], curr) => {
       const month = format(new Date(curr.transaction_date), 'MMM yyyy');
       const existing = acc.find(m => m.month === month);
@@ -218,11 +187,11 @@ const TransactionAnalytics = () => {
     );
   };
 
-  const calculateTotalSpent = (transactions: Transaction[]): number => {
+  const calculateTotalSpent = (transactions: any[]): number => {
     return transactions.reduce((sum, curr) => sum + curr.amount, 0);
   };
 
-  const calculateAverageSpent = (transactions: Transaction[]): number => {
+  const calculateAverageSpent = (transactions: any[]): number => {
     if (transactions.length === 0) return 0;
     return calculateTotalSpent(transactions) / transactions.length;
   };
@@ -239,17 +208,17 @@ const TransactionAnalytics = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Analytics</h2>
-        <div className="flex items-center space-x-2">
+        <select
+          value={selectedWallet}
+          onChange={(e) => setSelectedWallet(e.target.value)}
+          className="border rounded-md px-3 py-2"
+        >
           {wallets.map((wallet) => (
-            <Button
-              key={wallet.id}
-              variant={selectedWallet === wallet.id ? "default" : "outline"}
-              onClick={() => setSelectedWallet(wallet.id)}
-            >
-              {wallet.name} (${wallet.balance.toFixed(2)})
-            </Button>
+            <option key={wallet.id} value={wallet.id}>
+              {wallet.name}
+            </option>
           ))}
-        </div>
+        </select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -295,11 +264,13 @@ const TransactionAnalytics = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Summary</h3>
-          <div className="space-y-2">
-            <p>Total Spent: ${analyticsData.totalSpent.toFixed(2)}</p>
-            <p>Average Transaction: ${analyticsData.averageSpent.toFixed(2)}</p>
-          </div>
+          <h3 className="text-lg font-semibold mb-4">Total Spent</h3>
+          <p className="text-3xl font-bold">${analyticsData.totalSpent.toFixed(2)}</p>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Average Spent</h3>
+          <p className="text-3xl font-bold">${analyticsData.averageSpent.toFixed(2)}</p>
         </Card>
       </div>
     </div>
