@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/lib/supabase';
 import { useAccount } from '@/contexts/AccountContext';
-import { Loader2, Plus, Wallet, Users, Building2 } from "lucide-react";
+import { Loader2, Plus, Wallet, Users, Building2, MessageSquare } from "lucide-react";
 
 interface Wallet {
   id: string;
@@ -14,6 +14,7 @@ interface Wallet {
   balance: number;
   type: 'personal' | 'family' | 'business';
   created_at: string;
+  is_active: boolean;
 }
 
 const WalletManager = () => {
@@ -105,6 +106,13 @@ const WalletManager = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleWhatsAppShare = (wallet: Wallet) => {
+    const message = `Wallet Details:\nName: ${wallet.name}\nBalance: $${wallet.balance.toFixed(2)}\nType: ${wallet.type}`;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/6287784130824?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const getWalletIcon = (type: string) => {

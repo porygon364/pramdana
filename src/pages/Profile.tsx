@@ -14,6 +14,10 @@ import {
   Crown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import WhatsAppIntegration from '@/components/profile/WhatsAppIntegration';
 
 interface Achievement {
   id: string;
@@ -60,12 +64,41 @@ const achievements: Achievement[] = [
 ];
 
 const Profile = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [level, setLevel] = React.useState(1);
   const [xp, setXp] = React.useState(75);
   const [nextLevelXp] = React.useState(100);
 
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/login');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Profile</h1>
+      
+      <WhatsAppIntegration />
+      
+      <Card className="p-6">
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Account Settings</h2>
+          <Button variant="destructive" onClick={handleSignOut}>
+            Sign Out
+          </Button>
+        </div>
+      </Card>
+
       {/* Profile Header */}
       <Card className="p-6">
         <div className="flex items-center gap-4">
